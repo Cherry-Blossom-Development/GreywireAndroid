@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Greywire palette, from GreywireStudio-Website css/site.css and img/logo.svg -->
+    <color name="greywire_bg">#FF141619</color>
+    <color name="greywire_surface_2">#FF24282D</color>
+    <color name="greywire_logo_edge">#FF3A4046</color>
+    <color name="greywire_wire">#FF9BA0A6</color>
+    <color name="greywire_copper">#FFD07A3E</color>
+</resources>

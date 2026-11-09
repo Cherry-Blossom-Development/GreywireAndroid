@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Greywire" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/greywire_bg</item>
+        <!-- Splash screen (Android 12+) -->
+        <item name="android:windowSplashScreenBackground">@color/greywire_bg</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/greywire_surface_2</item>
+    </style>
+</resources>

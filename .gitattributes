@@ -1,0 +1,5 @@
+# gradlew is a shell script: keep LF so it runs on macOS/Linux
+gradlew text eol=lf
+*.bat text eol=crlf
+*.ttf binary
+*.jar binary

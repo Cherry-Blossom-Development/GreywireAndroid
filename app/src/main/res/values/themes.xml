@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark window so nothing flashes white before Compose draws -->
+    <style name="Theme.Greywire" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/greywire_bg</item>
+    </style>
+</resources>

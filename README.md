@@ -22,4 +22,4 @@ Both apps should offer the same features; build a feature in one, then match it 
 
 ## Status
 
-New, empty project (created 2026-11-09). No app code yet. The feature set is still to be decided.
+Foundation in place (2026-11-09): sign-in using the same Prosaurus/Breakroom account, and a home screen showing the user's Greywire membership and the Linework pedals. Visually it matches the Greywire Studio website. Build and run notes are in `CLAUDE.md`.

@@ -94,10 +94,14 @@ desktop.ini
 credentials.json
 secrets.xml
 
-# Environment configs — managed locally by switch-env.ps1, never committed
-environments/*.properties
+# The active environment is chosen locally by switch-env.ps1. The per-environment
+# files only hold public backend URLs, so they are committed.
+environments/active.properties
 
 # Claude Code temp files
 tmpclaude-*
 
 .claude/settings.local.json
+
+# Committed: it only holds the local backend URL (the root local.properties stays ignored)
+!environments/local.properties
