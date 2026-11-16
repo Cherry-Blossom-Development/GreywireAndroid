@@ -97,11 +97,12 @@ fun GreywireHeader(action: (@Composable () -> Unit)? = null) {
 }
 
 /**
- * A sub-screen top bar: back arrow, centered title, a line underneath.
+ * A sub-screen top bar: back arrow (left out when [onBack] is null), centered
+ * title, a line underneath.
  * (The site has no equivalent; it matches the iOS app's inline navigation bar.)
  */
 @Composable
-fun GreywireTopBar(title: String, onBack: () -> Unit) {
+fun GreywireTopBar(title: String, onBack: (() -> Unit)? = null) {
     Column {
         Box(
             modifier = Modifier
@@ -110,11 +111,13 @@ fun GreywireTopBar(title: String, onBack: () -> Unit) {
                 .padding(horizontal = 4.dp),
             contentAlignment = Alignment.Center
         ) {
-            IconButton(
-                onClick = onBack,
-                modifier = Modifier.align(Alignment.CenterStart).testTag("back-button")
-            ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = GreywireText)
+            if (onBack != null) {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier.align(Alignment.CenterStart).testTag("back-button")
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = GreywireText)
+                }
             }
             Text(
                 text = title,

@@ -24,10 +24,10 @@ Foundation built 2026-11-09: login and a home screen.
 
 - **Login**: works the same way as the Prosaurus app. `POST /api/auth/login`, the JWT goes into EncryptedSharedPreferences, and later calls send it as a Bearer header plus a `jwtToken` cookie. Refreshed tokens from the `X-New-Token` header are saved.
 - **Home**: a header with the brand and Sign out, a hero section, the user's Greywire membership (`GET /api/greywire/membership`: member or not, plus claimed pedals), and cards for Flashover and Switchyard. The pedal text is static and copied from the website.
-- **Legal** (2026-11-16, matching GreywireiPhone): Home has a "Terms and policies" card leading to Legal Documents, which shows the EULA's acceptance status (`GET /api/eula/status`) and the Privacy Policy. Both documents are in-app screens (`LegalDocuments.kt`) with the same text as the web versions at community.greywirestudio.com; if that text changes, update both apps. `POST /api/eula/accept` is wired up in `AuthRepository` but not yet used by any screen.
+- **Legal** (2026-11-16, matching GreywireiPhone): Home has a "Terms and policies" card leading to Legal Documents, which shows the EULA's acceptance status (`GET /api/eula/status`) and the Privacy Policy. Both documents are in-app screens (`LegalDocuments.kt`) with the same text as the web versions at community.greywirestudio.com; if that text changes, update both apps. - **EULA accept step** (2026-11-16, both apps): every signed-in launch, and every login, goes through `EulaGate` before Home. If `GET /api/eula/status` says the EULA isn't accepted, the user sees the EULA with a pinned footer: "Accept These Terms" (`POST /api/eula/accept`, then Home) or "Decline and sign out". A 401 signs out; any other error lets the user through, as Prosaurus does. Acceptance isn't cached on the device, so it's checked on each launch.
 - If the saved token is rejected (401), the app signs out and goes back to Login.
 
-**Future work is tracked in `TODO.md`**, including EULA acceptance, sign up, forgot password, pedal claiming, push notifications, release signing and E2E tests. Keep it up to date as items are done or found.
+**Future work is tracked in `TODO.md`**, including sign up, forgot password, pedal claiming, push notifications, release signing and E2E tests. Keep it up to date as items are done or found.
 
 ## Code layout (`app/src/main/java/com/cherryblossomdev/greywire/`)
 
@@ -37,10 +37,10 @@ Same structure as `../Android`:
 |------|------|
 | `MainActivity.kt` | Edge-to-edge, `GreywireTheme`, `testTagsAsResourceId` root |
 | `AppContainer.kt` | Manual DI: `TokenManager`, `AuthRepository`, `GreywireRepository` |
-| `navigation/NavGraph.kt` | `Screen` routes (Login, Home, Legal, Eula, PrivacyPolicy) and `GreywireNavGraph` |
+| `navigation/NavGraph.kt` | `Screen` routes (Login, EulaGate, Home, Legal, Eula, PrivacyPolicy) and `GreywireNavGraph` |
 | `network/` | `RetrofitClient`, `ApiService` (auth), `GreywireApiService` (`/api/greywire`) |
 | `data/` | `TokenManager`, `AuthRepository` (`AuthResult`), `GreywireRepository` |
-| `ui/screens/` | `LoginScreen` + `LoginViewModel`, `HomeScreen` + `HomeViewModel`, `LegalScreen` + `LegalViewModel`, `LegalDocuments` (EULA and Privacy Policy) |
+| `ui/screens/` | `LoginScreen` + `LoginViewModel`, `HomeScreen` + `HomeViewModel`, `EulaGateScreen` + `EulaGateViewModel` (the accept step), `LegalScreen` + `LegalViewModel`, `LegalDocuments` (EULA and Privacy Policy) |
 | `ui/components/GreywireComponents.kt` | Compose versions of the website's building blocks |
 | `ui/theme/` | Palette, fonts, Material color scheme |
 
@@ -87,4 +87,6 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## Testing conventions
 
-These are the same as `../Android`. Give interactive elements `Modifier.testTag("...")`; they show up to Appium as resource-ids with no package prefix. The current tags are `username-input`, `password-input`, `login-button`, `error-message`, `logout-button`, `home-title`, `membership-card`, `legal-card`, `eula-card`, `privacy-card`, `back-button`, `eula-screen` and `privacy-screen`.
+These are the same as `../Android`. Give interactive elements `Modifier.testTag("...")`; they show up to Appium as resource-ids with no package prefix. The current tags are `username-input`, `password-input`, `login-button`, `error-message`, `logout-button`, `home-title`, `membership-card`, `legal-card`, `eula-card`, `privacy-card`, `back-button`, `eula-screen`, `privacy-screen`, `eula-accept-button`, `eula-decline-button` and `eula-error`.
+
+To test the accept step, set the test user's EULA back to pending: in `breakroom_test`, set the user's `eula_required` row in `notifications` to `status = 'unviewed'` (accepting sets it to `dismissed`).

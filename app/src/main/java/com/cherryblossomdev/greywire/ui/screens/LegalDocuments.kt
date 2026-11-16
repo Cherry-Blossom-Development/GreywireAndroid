@@ -48,8 +48,16 @@ private const val EFFECTIVE_DATE = "October 22, 2026"
 
 private data class LegalSection(val number: Int, val title: String, val body: String)
 
+/**
+ * The EULA. With a [footer] (the accept step, see EulaGateScreen) and no
+ * [onBack], it's the screen a user must get past before Home.
+ */
 @Composable
-fun EulaScreen(onBack: () -> Unit, onOpenPrivacyPolicy: () -> Unit) {
+fun EulaScreen(
+    onBack: (() -> Unit)?,
+    onOpenPrivacyPolicy: () -> Unit,
+    footer: (@Composable () -> Unit)? = null
+) {
     LegalDocumentScreen(
         barTitle = "EULA",
         title = "End User License Agreement",
@@ -57,7 +65,8 @@ fun EulaScreen(onBack: () -> Unit, onOpenPrivacyPolicy: () -> Unit) {
         sections = EULA_SECTIONS,
         onBack = onBack,
         onLink = { onOpenPrivacyPolicy() },
-        testTag = "eula-screen"
+        testTag = "eula-screen",
+        footer = footer
     )
 }
 
@@ -80,16 +89,18 @@ private fun LegalDocumentScreen(
     title: String,
     intro: String,
     sections: List<LegalSection>,
-    onBack: () -> Unit,
+    onBack: (() -> Unit)?,
     onLink: (String) -> Unit,
-    testTag: String
+    testTag: String,
+    footer: (@Composable () -> Unit)? = null
 ) {
     Column(modifier = Modifier.fillMaxSize().systemBarsPadding()) {
         GreywireTopBar(title = barTitle, onBack = onBack)
 
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .weight(1f)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 24.dp)
                 .testTag(testTag),
@@ -142,6 +153,8 @@ private fun LegalDocumentScreen(
                 }
             }
         }
+
+        footer?.invoke()
     }
 }
 

@@ -4,7 +4,6 @@ Things to address later, gathered while building the foundation (login and home,
 
 ## Accounts and auth
 
-- **EULA acceptance.** The EULA and Privacy Policy can now be read (Home > Legal Documents), and the Legal screen shows whether the EULA was accepted. Nothing makes a user accept it yet: the Prosaurus app sends new users to an EULA screen after login (the backend creates a `eula_required` notification at login). Add an accept step for users whose status is pending; `AuthRepository.acceptEula()` (`POST /api/eula/accept`) is ready. Match it on iOS (`APIClient.acceptEula`).
 - **EULA status on error.** If `/api/eula/status` fails, the Legal screen shows the EULA as "Accepted" (copied from iOS, so a user isn't shown a status they can't act on). That's misleading; consider an "Unknown" state in both apps.
 - **Sign up.** There's no way to create an account in the app yet. Prosaurus hashes the password client-side for signup (`AuthRepository.signup` in `../Android`); reuse that.
 - **Forgot password.** Not built. The Prosaurus app has `ForgotPasswordScreen` using `/api/auth/forgot-password`.

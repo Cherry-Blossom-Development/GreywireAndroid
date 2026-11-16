@@ -10,6 +10,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.cherryblossomdev.greywire.AppContainer
+import com.cherryblossomdev.greywire.ui.screens.EulaGateScreen
+import com.cherryblossomdev.greywire.ui.screens.EulaGateViewModel
 import com.cherryblossomdev.greywire.ui.screens.EulaScreen
 import com.cherryblossomdev.greywire.ui.screens.HomeScreen
 import com.cherryblossomdev.greywire.ui.screens.HomeViewModel
@@ -22,6 +24,7 @@ import kotlinx.coroutines.launch
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
+    object EulaGate : Screen("eula-gate")
     object Home : Screen("home")
     object Legal : Screen("legal")
     object Eula : Screen("eula")
@@ -37,7 +40,8 @@ fun GreywireNavGraph(navController: NavHostController = rememberNavController())
     // Current user ID (set after login); later screens will need it
     val currentUserId = remember { mutableIntStateOf(0) }
 
-    val startDestination = if (deps.authRepository.isLoggedIn()) Screen.Home.route else Screen.Login.route
+    // Signed-in launches go through the EULA check before Home
+    val startDestination = if (deps.authRepository.isLoggedIn()) Screen.EulaGate.route else Screen.Login.route
 
     fun goToLogin() {
         navController.navigate(Screen.Login.route) {
@@ -58,10 +62,25 @@ fun GreywireNavGraph(navController: NavHostController = rememberNavController())
                 viewModel = viewModel,
                 onLoginSuccess = { userId ->
                     currentUserId.intValue = userId
-                    navController.navigate(Screen.Home.route) {
+                    navController.navigate(Screen.EulaGate.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
                 }
+            )
+        }
+
+        composable(Screen.EulaGate.route) {
+            val viewModel = remember { EulaGateViewModel(deps.authRepository) }
+            EulaGateScreen(
+                viewModel = viewModel,
+                onAccepted = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.EulaGate.route) { inclusive = true }
+                    }
+                },
+                onDecline = ::performLogout,
+                onSessionExpired = ::performLogout,
+                onOpenPrivacyPolicy = { navController.navigate(Screen.PrivacyPolicy.route) }
             )
         }
 
