@@ -4,7 +4,8 @@ Things to address later, gathered while building the foundation (login and home,
 
 ## Accounts and auth
 
-- **EULA acceptance.** The Prosaurus app sends new users to an EULA screen after login (`/api/eula/...`, and the backend creates a `eula_required` notification at login). Greywire skips this entirely. Decide whether Greywire users must accept the same EULA, or a Greywire-specific one, and add the screen.
+- **EULA acceptance.** The EULA and Privacy Policy can now be read (Home > Legal Documents), and the Legal screen shows whether the EULA was accepted. Nothing makes a user accept it yet: the Prosaurus app sends new users to an EULA screen after login (the backend creates a `eula_required` notification at login). Add an accept step for users whose status is pending; `AuthRepository.acceptEula()` (`POST /api/eula/accept`) is ready. Match it on iOS (`APIClient.acceptEula`).
+- **EULA status on error.** If `/api/eula/status` fails, the Legal screen shows the EULA as "Accepted" (copied from iOS, so a user isn't shown a status they can't act on). That's misleading; consider an "Unknown" state in both apps.
 - **Sign up.** There's no way to create an account in the app yet. Prosaurus hashes the password client-side for signup (`AuthRepository.signup` in `../Android`); reuse that.
 - **Forgot password.** Not built. The Prosaurus app has `ForgotPasswordScreen` using `/api/auth/forgot-password`.
 - **Guest accounts.** `/api/auth/me` returns `isGuest`, and guests can never be Greywire members. The app doesn't handle guests specially yet.
@@ -25,7 +26,7 @@ Things to address later, gathered while building the foundation (login and home,
 
 - **Release signing key.** Greywire needs its own upload keystore (don't reuse `breakroom-release.jks`). Release builds currently go unsigned unless `keystore.properties` exists.
 - **Push notifications.** Firebase isn't set up (no `google-services.json`, no FCM token registration). Prosaurus registers FCM tokens on login and removes them on logout; do the same when notifications are needed.
-- **Play Store listing**: app name, icon assets, screenshots, privacy policy and Data Safety form.
+- **Play Store listing**: text is drafted in `PLAY_STORE_LISTING.md` (from iOS's `APP_STORE_LISTING.md`). Still needed: the 512px icon, feature graphic, screenshots and the Data Safety form.
 - **Version bumps**: `versionCode` / `versionName` in `app/build.gradle.kts` (currently 1 / 0.1.0).
 
 ## Testing

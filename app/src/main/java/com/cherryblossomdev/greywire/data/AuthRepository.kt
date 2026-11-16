@@ -2,6 +2,8 @@ package com.cherryblossomdev.greywire.data
 
 import com.cherryblossomdev.greywire.network.ApiService
 import com.cherryblossomdev.greywire.network.AuthResponse
+import com.cherryblossomdev.greywire.network.EulaAcceptResponse
+import com.cherryblossomdev.greywire.network.EulaStatusResponse
 import com.cherryblossomdev.greywire.network.ErrorResponse
 import com.cherryblossomdev.greywire.network.LoginRequest
 import com.cherryblossomdev.greywire.network.MeResponse
@@ -67,6 +69,39 @@ class AuthRepository(
         try {
             if (bearerToken != null) apiService.logout(bearerToken)
         } catch (e: Exception) { /* signed out locally; nothing else to do */ }
+    }
+
+    suspend fun getEulaStatus(): AuthResult<EulaStatusResponse> {
+        val bearerToken = tokenManager.getBearerToken()
+            ?: return AuthResult.Error("Not logged in", unauthorized = true)
+        return try {
+            val response = apiService.getEulaStatus(bearerToken)
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                AuthResult.Success(body)
+            } else {
+                AuthResult.Error("Couldn't load EULA status", unauthorized = response.code() == 401)
+            }
+        } catch (e: Exception) {
+            AuthResult.Error(e.message ?: "Network error")
+        }
+    }
+
+    suspend fun acceptEula(): AuthResult<EulaAcceptResponse> {
+        val bearerToken = tokenManager.getBearerToken()
+            ?: return AuthResult.Error("Not logged in", unauthorized = true)
+        return try {
+            val response = apiService.acceptEula(bearerToken)
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                AuthResult.Success(body)
+            } else {
+                AuthResult.Error(parseError(response.errorBody()?.string(), "Couldn't accept the EULA"),
+                    unauthorized = response.code() == 401)
+            }
+        } catch (e: Exception) {
+            AuthResult.Error(e.message ?: "Network error")
+        }
     }
 
     fun isLoggedIn(): Boolean = tokenManager.isLoggedIn()

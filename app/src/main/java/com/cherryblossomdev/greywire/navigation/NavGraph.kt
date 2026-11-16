@@ -10,15 +10,22 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.cherryblossomdev.greywire.AppContainer
+import com.cherryblossomdev.greywire.ui.screens.EulaScreen
 import com.cherryblossomdev.greywire.ui.screens.HomeScreen
 import com.cherryblossomdev.greywire.ui.screens.HomeViewModel
+import com.cherryblossomdev.greywire.ui.screens.LegalScreen
+import com.cherryblossomdev.greywire.ui.screens.LegalViewModel
 import com.cherryblossomdev.greywire.ui.screens.LoginScreen
 import com.cherryblossomdev.greywire.ui.screens.LoginViewModel
+import com.cherryblossomdev.greywire.ui.screens.PrivacyPolicyScreen
 import kotlinx.coroutines.launch
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Home : Screen("home")
+    object Legal : Screen("legal")
+    object Eula : Screen("eula")
+    object PrivacyPolicy : Screen("privacy-policy")
 }
 
 @Composable
@@ -63,8 +70,31 @@ fun GreywireNavGraph(navController: NavHostController = rememberNavController())
             HomeScreen(
                 viewModel = viewModel,
                 onLogout = ::performLogout,
+                onSessionExpired = ::performLogout,
+                onOpenLegal = { navController.navigate(Screen.Legal.route) }
+            )
+        }
+
+        composable(Screen.Legal.route) {
+            val viewModel = remember { LegalViewModel(deps.authRepository) }
+            LegalScreen(
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() },
+                onOpenEula = { navController.navigate(Screen.Eula.route) },
+                onOpenPrivacyPolicy = { navController.navigate(Screen.PrivacyPolicy.route) },
                 onSessionExpired = ::performLogout
             )
+        }
+
+        composable(Screen.Eula.route) {
+            EulaScreen(
+                onBack = { navController.popBackStack() },
+                onOpenPrivacyPolicy = { navController.navigate(Screen.PrivacyPolicy.route) }
+            )
+        }
+
+        composable(Screen.PrivacyPolicy.route) {
+            PrivacyPolicyScreen(onBack = { navController.popBackStack() })
         }
     }
 }

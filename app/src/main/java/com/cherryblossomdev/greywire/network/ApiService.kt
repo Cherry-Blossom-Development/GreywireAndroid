@@ -27,6 +27,18 @@ data class MeResponse(
     val greywireMember: Boolean = false
 )
 
+// EULA endpoints (Breakroom/backend/routes/eula.js). Greywire shares the
+// Prosaurus account, so it shares the same acceptance record.
+data class EulaStatusResponse(
+    val accepted: Boolean,
+    val notificationId: Int? = null,
+    val acceptedAt: String? = null
+)
+
+data class EulaAcceptResponse(
+    val accepted: Boolean
+)
+
 data class ErrorResponse(
     val message: String
 )
@@ -41,4 +53,10 @@ interface ApiService {
 
     @POST("api/auth/logout")
     suspend fun logout(@Header("Authorization") token: String): Response<AuthResponse>
+
+    @GET("api/eula/status")
+    suspend fun getEulaStatus(@Header("Authorization") token: String): Response<EulaStatusResponse>
+
+    @POST("api/eula/accept")
+    suspend fun acceptEula(@Header("Authorization") token: String): Response<EulaAcceptResponse>
 }

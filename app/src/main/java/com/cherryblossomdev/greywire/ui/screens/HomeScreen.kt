@@ -1,5 +1,7 @@
 package com.cherryblossomdev.greywire.ui.screens
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,8 +14,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,6 +27,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -114,7 +120,8 @@ private val LineworkPedals = listOf(
 fun HomeScreen(
     viewModel: HomeViewModel,
     onLogout: () -> Unit,
-    onSessionExpired: () -> Unit
+    onSessionExpired: () -> Unit,
+    onOpenLegal: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -169,6 +176,27 @@ fun HomeScreen(
             LineworkPedals.forEach { pedal ->
                 PedalCard(pedal)
                 Spacer(Modifier.height(16.dp))
+            }
+            Spacer(Modifier.height(40.dp))
+
+            // Legal
+            SectionDivider()
+            Eyebrow("Legal")
+            SectionHeading("Terms and policies")
+            Spacer(Modifier.height(16.dp))
+            GreywireCard(modifier = Modifier.clip(RoundedCornerShape(10.dp)).clickable(onClick = onOpenLegal).testTag("legal-card")) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Legal Documents", style = MaterialTheme.typography.titleLarge, color = GreywireText)
+                        Spacer(Modifier.height(4.dp))
+                        Text("EULA, Privacy Policy", style = MaterialTheme.typography.bodySmall, color = GreywireMuted)
+                    }
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = GreywireMuted
+                    )
+                }
             }
             Spacer(Modifier.height(24.dp))
         }

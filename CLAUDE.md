@@ -24,6 +24,7 @@ Foundation built 2026-11-09: login and a home screen.
 
 - **Login**: works the same way as the Prosaurus app. `POST /api/auth/login`, the JWT goes into EncryptedSharedPreferences, and later calls send it as a Bearer header plus a `jwtToken` cookie. Refreshed tokens from the `X-New-Token` header are saved.
 - **Home**: a header with the brand and Sign out, a hero section, the user's Greywire membership (`GET /api/greywire/membership`: member or not, plus claimed pedals), and cards for Flashover and Switchyard. The pedal text is static and copied from the website.
+- **Legal** (2026-11-16, matching GreywireiPhone): Home has a "Terms and policies" card leading to Legal Documents, which shows the EULA's acceptance status (`GET /api/eula/status`) and the Privacy Policy. Both documents are in-app screens (`LegalDocuments.kt`) with the same text as the web versions at community.greywirestudio.com; if that text changes, update both apps. `POST /api/eula/accept` is wired up in `AuthRepository` but not yet used by any screen.
 - If the saved token is rejected (401), the app signs out and goes back to Login.
 
 **Future work is tracked in `TODO.md`**, including EULA acceptance, sign up, forgot password, pedal claiming, push notifications, release signing and E2E tests. Keep it up to date as items are done or found.
@@ -36,14 +37,14 @@ Same structure as `../Android`:
 |------|------|
 | `MainActivity.kt` | Edge-to-edge, `GreywireTheme`, `testTagsAsResourceId` root |
 | `AppContainer.kt` | Manual DI: `TokenManager`, `AuthRepository`, `GreywireRepository` |
-| `navigation/NavGraph.kt` | `Screen` routes (Login, Home) and `GreywireNavGraph` |
+| `navigation/NavGraph.kt` | `Screen` routes (Login, Home, Legal, Eula, PrivacyPolicy) and `GreywireNavGraph` |
 | `network/` | `RetrofitClient`, `ApiService` (auth), `GreywireApiService` (`/api/greywire`) |
 | `data/` | `TokenManager`, `AuthRepository` (`AuthResult`), `GreywireRepository` |
-| `ui/screens/` | `LoginScreen` + `LoginViewModel`, `HomeScreen` + `HomeViewModel` |
+| `ui/screens/` | `LoginScreen` + `LoginViewModel`, `HomeScreen` + `HomeViewModel`, `LegalScreen` + `LegalViewModel`, `LegalDocuments` (EULA and Privacy Policy) |
 | `ui/components/GreywireComponents.kt` | Compose versions of the website's building blocks |
 | `ui/theme/` | Palette, fonts, Material color scheme |
 
-Identifiers: package and applicationId are `com.cherryblossomdev.greywire`; the app name is "Greywire".
+Identifiers: package and applicationId are `com.cherryblossomdev.greywire`; the app name is "Greywire Studio" (matching iOS and the website).
 
 ## Visual design: match GreywireStudio-Website
 
@@ -51,7 +52,7 @@ The app should look like `../GreywireStudio-Website` (`css/site.css`). It's dark
 
 - **Colors** (`ui/theme/Color.kt`) are the site's `:root` variables: bg `#141619`, surface `#1c1f23`, surface-2 `#24282d`, line `#33383e`, text `#e8e6e1`, muted `#9ba0a6`, copper `#d07a3e`, copper-soft `#e9a46f`, signal `#5fd38a`. If the site's palette changes, change these to match.
 - **Fonts**: Space Grotesk for text and IBM Plex Mono for labels, both bundled in `res/font` under the OFL (license texts are in `licenses/`). There's no static SemiBold Space Grotesk, so 600 maps to Medium.
-- **Components** (`GreywireComponents.kt`), with the site class each one mirrors: `GreywireHeader` (`.site-header`), `GreywireBrand` (`.brand`), `Eyebrow` (`.eyebrow`), `GreywireCard` (`.card`), `StatusPill` (`.status`), `GreywireButton` (`.button`), `GreywireGhostButton` (`.button.ghost`). Build new screens from these.
+- **Components** (`GreywireComponents.kt`), with the site class each one mirrors: `GreywireHeader` (`.site-header`), `GreywireBrand` (`.brand`), `Eyebrow` (`.eyebrow`), `GreywireCard` (`.card`), `StatusPill` (`.status`), `GreywireButton` (`.button`), `GreywireGhostButton` (`.button.ghost`), plus `GreywireTopBar` (back arrow and title for sub-screens; no site equivalent). Build new screens from these.
 - **Logo**: `res/drawable/ic_greywire_logo.xml` is a vector port of the site's `img/logo.svg`. The launcher icon is adaptive (the wire and spark on surface-2), with the full logo as the fallback below API 26.
 
 ## Environments
@@ -86,4 +87,4 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## Testing conventions
 
-These are the same as `../Android`. Give interactive elements `Modifier.testTag("...")`; they show up to Appium as resource-ids with no package prefix. The current tags are `username-input`, `password-input`, `login-button`, `error-message`, `logout-button`, `home-title` and `membership-card`.
+These are the same as `../Android`. Give interactive elements `Modifier.testTag("...")`; they show up to Appium as resource-ids with no package prefix. The current tags are `username-input`, `password-input`, `login-button`, `error-message`, `logout-button`, `home-title`, `membership-card`, `legal-card`, `eula-card`, `privacy-card`, `back-button`, `eula-screen` and `privacy-screen`.
