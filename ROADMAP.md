@@ -15,6 +15,23 @@ Small loose ends (polish, dev notes) stay in `TODO.md`. Update this file as each
 
 **Status key:** `done` · `wip` · `todo` · `n/a` (nothing needed in that project) · `?` (not yet checked)
 
+## Where we left off (2026-11-17)
+
+**Done on Android:** 0.1 `X-Site: greywire`, 1.4 Claim a pedal, 1.1 Sign up. All pushed and tested on the emulator against the local test backend.
+
+**Waiting on answers:**
+- **1.2 Email verification:** new accounts start unverified, and the email links to the website. Is that enough, or should the app open the link itself (deep links, plus a backend email template change)?
+
+**Next up:** 1.3 Forgot password on Android, the same way as Prosaurus (`ForgotPasswordScreen`, `/api/auth/forgot-password`).
+
+**Waiting for iPhone (on the Mac):** 0.1, 1.1 and 1.4 are done on Android, not yet on iPhone.
+
+**Test environment state:**
+- `breakroom_test`: `testuser` holds test pedal `00000000000000A1` (it's a member), and there's a test account `gwtest073722`. `npx ts-node database/setup.ts` in BreakTest resets everything.
+- To test again: start Docker Desktop, then from `../Breakroom` load `.env.test` and run `docker compose -f docker-compose.test.yml up -d backend-test`; start the `Pixel_9_API_35` emulator.
+
+**Working style agreed:** small commits, one change each; push after each finished step; update this file as steps finish.
+
 ## Decisions
 
 - **2026-11-17: Greywire is for the whole band, not only pedal owners.** Buying a pedal and claiming its serial gives a free membership (no limits). Musicians who don't need a pedal (drummers, singers...) can still use Greywire the way people use Prosaurus: limited free use, then a **Greywire Studio subscription** with exactly the same limits and price as the Prosaurus subscription. This replaces the earlier "members only" rule, so the backend's `greywireAccess` middleware, the web route guard and the EULA ("The community is open to members only") all need changing (steps 1.6 to 1.11).
