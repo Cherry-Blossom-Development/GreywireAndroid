@@ -32,9 +32,15 @@ object RetrofitClient {
     // Tags every request for the backend's analytics. The backend only accepts
     // web / android / ios (backend/utilities/platform.js), so Greywire shows up
     // as "android" alongside Prosaurus for now.
+    //
+    // X-Site tells the backend this is the Greywire community, not Prosaurus
+    // (backend/utilities/site.js). It decides which site's rooms, sessions and
+    // bands the app sees, and makes the backend require Greywire membership
+    // outside /api/auth, /api/greywire and /api/eula (middleware/greywireAccess.js).
     private val platformInterceptor = Interceptor { chain ->
         val request = chain.request().newBuilder()
             .addHeader("X-Client-Platform", "android")
+            .addHeader("X-Site", "greywire")
             .build()
         chain.proceed(request)
     }

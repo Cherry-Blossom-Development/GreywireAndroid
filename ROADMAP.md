@@ -21,7 +21,7 @@ The backend serves both sites and works out the site from the `X-Site` header (n
 
 | Step | Backend | Web | Android | iPhone |
 |------|---------|-----|---------|--------|
-| 0.1 Send `X-Site: greywire` on every request | done | n/a (host) | todo | ? |
+| 0.1 Send `X-Site: greywire` on every request | done | n/a (host) | done | ? |
 | 0.2 Handle 403 `GREYWIRE_MEMBERSHIP_REQUIRED` (send to claim) | done | done | todo | todo |
 | 0.3 `greywire-android` / `greywire-ios` platform values for analytics | todo | n/a | todo | todo |
 
@@ -100,4 +100,5 @@ Notes:
 
 Newest first. One line per finished step, with the commit.
 
+- 2026-11-17: 0.1 Android: `X-Site: greywire` added in `RetrofitClient`. Builds; not yet checked against a running backend.
 - 2026-11-17: Roadmap written.
