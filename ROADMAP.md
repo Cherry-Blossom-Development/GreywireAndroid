@@ -18,6 +18,7 @@ Small loose ends (polish, dev notes) stay in `TODO.md`. Update this file as each
 ## Decisions
 
 - **2026-11-17: Greywire is for the whole band, not only pedal owners.** Buying a pedal and claiming its serial gives a free membership (no limits). Musicians who don't need a pedal (drummers, singers...) can still use Greywire the way people use Prosaurus: limited free use, then a **Greywire Studio subscription** with exactly the same limits and price as the Prosaurus subscription. This replaces the earlier "members only" rule, so the backend's `greywireAccess` middleware, the web route guard and the EULA ("The community is open to members only") all need changing (steps 1.6 to 1.11).
+- **2026-11-17: One subscription for both sites.** Subscribing to Prosaurus or to Greywire Studio is the same subscription and covers both.
 - **2026-11-17: Lyrics are shared between Prosaurus and Greywire**, like profiles and friends. `routes/lyrics.js` already works that way.
 - **2026-11-17: Switchyard connectivity (4.6) waits** until the hardware is further along.
 
@@ -42,7 +43,7 @@ The backend serves both sites and works out the site from the `X-Site` header (n
 | 1.5 Claim a pedal: QR scan | ? | n/a | todo | todo |
 | 1.6 Open Greywire to non-members: remove members-only gating (`greywireAccess.js`, web `requiresMember`) | todo | todo | n/a | n/a |
 | 1.7 Guest accounts (`isGuest`, can never be members) | done | ? | todo | todo |
-| 1.8 Greywire Studio subscription: same limits and price as Prosaurus (see question) | ? | ? | n/a | n/a |
+| 1.8 One subscription for both sites (Prosaurus and Greywire Studio) | done | ? | n/a | n/a |
 | 1.9 Free-tier limits on Greywire: members unlimited, others like Prosaurus (sessions 3+3, bands 1) | done | ? | n/a | n/a |
 | 1.10 Paywall: handle 402 `requiresSubscription`, show plan status (`/api/billing/plan`) | done | ? | todo | todo |
 | 1.11 In-app purchase (Google Play Billing / StoreKit) and backend verification for the Greywire app IDs | todo | n/a | todo | todo |
@@ -53,7 +54,7 @@ Notes:
 - **1.9**: already in place: `checkFreeTierLimit` (`utilities/sessionRecords.js`) and the band limit in `routes/bands.js` let members past the limit on the Greywire site, and everyone else needs `isSubscribed`.
 - **1.11**: `/api/subscriptions/google/verify` checks purchases against one package name (`GOOGLE_PLAY_PACKAGE_NAME`, Prosaurus's). The Greywire app (`com.cherryblossomdev.greywire`) needs its own; Apple verification likewise needs the Greywire bundle ID.
 
-**Open question (1.8):** `user_subscriptions` has no site column, so today one subscription covers both sites: a Prosaurus subscriber already gets past Greywire's limits. Is the Greywire Studio subscription the same subscription (subscribe once, both sites), or a separate one?
+**1.8 (decided 2026-11-17):** one subscription covers both sites. `user_subscriptions` has no site column, so this is already how the backend works: subscribing in either app, or on either website, lifts the limits on both. The web Greywire billing page still needs checking.
 
 ## Phase 2: Music features the web community already has
 
