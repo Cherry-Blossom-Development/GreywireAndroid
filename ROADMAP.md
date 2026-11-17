@@ -111,7 +111,7 @@ Lyrics are shared between sites (decided 2026-11-17). Band pages hang off bands,
 
 Notes:
 - **5.1**: Firebase isn't set up (no `google-services.json`). Prosaurus registers its FCM token on login and removes it on logout; do the same.
-- **5.4**: add a member (a grant or a claimed pedal) to `BreakTest/database/setup.ts`. Until then, Home's "Member" state has only been checked in code, not on screen.
+- **5.4**: `BreakTest/database/seed-data.sql` now has two unclaimed test pedals (`00000000000000A1`, `00000000000000A2`, Flashover) for testing the claim flow. Still needed: a user who is already a member when the tests start (a grant or a claimed pedal). Until then, Home's "Member" state has only been checked in code, not on screen.
 - **5.5**: the test tags are listed in `CLAUDE.md`. Use `mobile: clearApp` with appId `com.cherryblossomdev.greywire` between tests.
 - **4.3 / 4.4**: the Flashover and Switchyard cards on Home are hard-coded text copied from the website. The website's pedal SVGs are in `../GreywireStudio-Website/img/`.
 
@@ -119,7 +119,7 @@ Notes:
 
 Newest first. One line per finished step, with the commit.
 
-- 2026-11-17: 0.1 Android: `X-Site: greywire` added in `RetrofitClient`. Builds; not yet checked against a running backend.
-- 2026-11-17: 1.4 Android: Claim a pedal screen (`ClaimPedalScreen.kt`), reached from Home's membership card. Builds; not yet tried against a running backend.
+- 2026-11-17: 0.1 Android: `X-Site: greywire` added in `RetrofitClient`. Checked: login and claim work against the local test backend with it.
+- 2026-11-17: 1.4 Android: Claim a pedal screen (`ClaimPedalScreen.kt`), reached from Home's membership card. Tested on the emulator against the local test backend: bad format, unknown serial, a valid claim (typed with dashes, lowercase), Home updating to Member, and re-claiming your own pedal.
 - 2026-11-17: Decisions recorded: Greywire open to non-pedal musicians (free tier + subscription), lyrics shared.
 - 2026-11-17: Roadmap written.
