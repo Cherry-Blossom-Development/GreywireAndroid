@@ -20,7 +20,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -49,11 +48,9 @@ import com.cherryblossomdev.greywire.ui.components.GreywireButton
 import com.cherryblossomdev.greywire.ui.components.GreywireCard
 import com.cherryblossomdev.greywire.ui.components.GreywireTopBar
 import com.cherryblossomdev.greywire.ui.components.StatusPill
-import com.cherryblossomdev.greywire.ui.theme.GreywireCopper
-import com.cherryblossomdev.greywire.ui.theme.GreywireLine
+import com.cherryblossomdev.greywire.ui.components.greywireTextFieldColors
 import com.cherryblossomdev.greywire.ui.theme.GreywireMuted
 import com.cherryblossomdev.greywire.ui.theme.GreywireSignal
-import com.cherryblossomdev.greywire.ui.theme.GreywireSurface
 import com.cherryblossomdev.greywire.ui.theme.GreywireText
 import com.cherryblossomdev.greywire.ui.theme.MonoSmallStyle
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -220,18 +217,7 @@ private fun ClaimForm(
         textStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = MonoSmallStyle.fontFamily),
         singleLine = true,
         shape = RoundedCornerShape(10.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = GreywireCopper,
-            unfocusedBorderColor = GreywireLine,
-            focusedLabelColor = GreywireCopper,
-            unfocusedLabelColor = GreywireMuted,
-            cursorColor = GreywireCopper,
-            focusedTextColor = GreywireText,
-            unfocusedTextColor = GreywireText,
-            focusedContainerColor = GreywireSurface,
-            unfocusedContainerColor = GreywireSurface,
-            disabledContainerColor = GreywireSurface
-        ),
+        colors = greywireTextFieldColors(),
         keyboardOptions = KeyboardOptions(
             capitalization = KeyboardCapitalization.Characters,
             keyboardType = KeyboardType.Ascii,

@@ -27,6 +27,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -221,3 +223,18 @@ fun GreywireGhostButton(
         contentPadding = PaddingValues(horizontal = 16.dp)
     ) { content() }
 }
+
+/** Colors for an OutlinedTextField: the site's form inputs (copper focus, surface fill). */
+@Composable
+fun greywireTextFieldColors(): TextFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = GreywireCopper,
+        unfocusedBorderColor = GreywireLine,
+        focusedLabelColor = GreywireCopper,
+        unfocusedLabelColor = GreywireMuted,
+        cursorColor = GreywireCopper,
+        focusedTextColor = GreywireText,
+        unfocusedTextColor = GreywireText,
+        focusedContainerColor = GreywireSurface,
+        unfocusedContainerColor = GreywireSurface,
+        disabledContainerColor = GreywireSurface
+    )

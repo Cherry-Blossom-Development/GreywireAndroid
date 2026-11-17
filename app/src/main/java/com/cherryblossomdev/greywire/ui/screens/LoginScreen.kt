@@ -25,7 +25,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -56,10 +55,8 @@ import com.cherryblossomdev.greywire.data.AuthResult
 import com.cherryblossomdev.greywire.ui.components.Eyebrow
 import com.cherryblossomdev.greywire.ui.components.GreywireBrand
 import com.cherryblossomdev.greywire.ui.components.GreywireButton
-import com.cherryblossomdev.greywire.ui.theme.GreywireCopper
-import com.cherryblossomdev.greywire.ui.theme.GreywireLine
+import com.cherryblossomdev.greywire.ui.components.greywireTextFieldColors
 import com.cherryblossomdev.greywire.ui.theme.GreywireMuted
-import com.cherryblossomdev.greywire.ui.theme.GreywireSurface
 import com.cherryblossomdev.greywire.ui.theme.GreywireText
 import com.cherryblossomdev.greywire.ui.theme.MonoSmallStyle
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -127,18 +124,7 @@ fun LoginScreen(
         if (uiState.isSuccess) onLoginSuccess(uiState.userId)
     }
 
-    val fieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = GreywireCopper,
-        unfocusedBorderColor = GreywireLine,
-        focusedLabelColor = GreywireCopper,
-        unfocusedLabelColor = GreywireMuted,
-        cursorColor = GreywireCopper,
-        focusedTextColor = GreywireText,
-        unfocusedTextColor = GreywireText,
-        focusedContainerColor = GreywireSurface,
-        unfocusedContainerColor = GreywireSurface,
-        disabledContainerColor = GreywireSurface
-    )
+    val fieldColors = greywireTextFieldColors()
 
     Box(
         modifier = Modifier
