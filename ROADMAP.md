@@ -90,6 +90,12 @@ Decided 2026-11-17: Lyric Lab and band pages belong in Greywire. Neither is on t
 | 5.4 Seeded Greywire member in `breakroom_test` | n/a | n/a | todo | n/a |
 | 5.5 BreakTest E2E tests for the Greywire apps | n/a | n/a | todo | todo |
 
+Notes:
+- **5.1**: Firebase isn't set up (no `google-services.json`). Prosaurus registers its FCM token on login and removes it on logout; do the same.
+- **5.4**: add a member (a grant or a claimed pedal) to `BreakTest/database/setup.ts`. Until then, Home's "Member" state has only been checked in code, not on screen.
+- **5.5**: the test tags are listed in `CLAUDE.md`. Use `mobile: clearApp` with appId `com.cherryblossomdev.greywire` between tests.
+- **4.3 / 4.4**: the Flashover and Switchyard cards on Home are hard-coded text copied from the website. The website's pedal SVGs are in `../GreywireStudio-Website/img/`.
+
 ## Log
 
 Newest first. One line per finished step, with the commit.
