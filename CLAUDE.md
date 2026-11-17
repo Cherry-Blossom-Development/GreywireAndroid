@@ -37,10 +37,10 @@ Same structure as `../Android`:
 |------|------|
 | `MainActivity.kt` | Edge-to-edge, `GreywireTheme`, `testTagsAsResourceId` root |
 | `AppContainer.kt` | Manual DI: `TokenManager`, `AuthRepository`, `GreywireRepository` |
-| `navigation/NavGraph.kt` | `Screen` routes (Login, EulaGate, Home, ClaimPedal, Legal, Eula, PrivacyPolicy) and `GreywireNavGraph` |
+| `navigation/NavGraph.kt` | `Screen` routes (Login, Signup, EulaGate, Home, ClaimPedal, Legal, Eula, PrivacyPolicy) and `GreywireNavGraph` |
 | `network/` | `RetrofitClient`, `ApiService` (auth), `GreywireApiService` (`/api/greywire`) |
 | `data/` | `TokenManager`, `AuthRepository` (`AuthResult`), `GreywireRepository` |
-| `ui/screens/` | `LoginScreen` + `LoginViewModel`, `HomeScreen` + `HomeViewModel`, `EulaGateScreen` + `EulaGateViewModel` (the accept step), `ClaimPedalScreen` + `ClaimPedalViewModel` (claim a pedal by serial), `LegalScreen` + `LegalViewModel`, `LegalDocuments` (EULA and Privacy Policy) |
+| `ui/screens/` | `LoginScreen` + `LoginViewModel`, `SignupScreen` + `SignupViewModel`, `HomeScreen` + `HomeViewModel`, `EulaGateScreen` + `EulaGateViewModel` (the accept step), `ClaimPedalScreen` + `ClaimPedalViewModel` (claim a pedal by serial), `LegalScreen` + `LegalViewModel`, `LegalDocuments` (EULA and Privacy Policy) |
 | `ui/components/GreywireComponents.kt` | Compose versions of the website's building blocks |
 | `ui/theme/` | Palette, fonts, Material color scheme |
 
@@ -87,6 +87,6 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## Testing conventions
 
-These are the same as `../Android`. Give interactive elements `Modifier.testTag("...")`; they show up to Appium as resource-ids with no package prefix. The current tags are `username-input`, `password-input`, `login-button`, `error-message`, `logout-button`, `home-title`, `membership-card`, `legal-card`, `eula-card`, `privacy-card`, `back-button`, `eula-screen`, `privacy-screen`, `eula-accept-button`, `eula-decline-button`, `eula-error`, `claim-pedal-button` (on Home), `claim-screen`, `serial-input`, `claim-button`, `claim-error`, `claim-success` and `claim-done-button`.
+These are the same as `../Android`. Give interactive elements `Modifier.testTag("...")`; they show up to Appium as resource-ids with no package prefix. The current tags are `username-input`, `password-input`, `login-button`, `error-message`, `logout-button`, `home-title`, `membership-card`, `legal-card`, `eula-card`, `privacy-card`, `back-button`, `eula-screen`, `privacy-screen`, `eula-accept-button`, `eula-decline-button`, `eula-error`, `claim-pedal-button` (on Home), `claim-screen`, `serial-input`, `claim-button`, `claim-error`, `claim-success`, `claim-done-button`, `create-account-link` (on Login), `signup-screen`, `signup-username-input`, `first-name-input`, `last-name-input`, `email-input`, `confirm-password-input`, `create-account-button` and `go-to-login-button`. The signup screen reuses `password-input` and `error-message`.
 
 To test the accept step, set the test user's EULA back to pending: in `breakroom_test`, set the user's `eula_required` row in `notifications` to `status = 'unviewed'` (accepting sets it to `dismissed`).

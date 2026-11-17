@@ -26,6 +26,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -56,6 +57,7 @@ import com.cherryblossomdev.greywire.ui.components.Eyebrow
 import com.cherryblossomdev.greywire.ui.components.GreywireBrand
 import com.cherryblossomdev.greywire.ui.components.GreywireButton
 import com.cherryblossomdev.greywire.ui.components.greywireTextFieldColors
+import com.cherryblossomdev.greywire.ui.theme.GreywireCopper
 import com.cherryblossomdev.greywire.ui.theme.GreywireMuted
 import com.cherryblossomdev.greywire.ui.theme.GreywireText
 import com.cherryblossomdev.greywire.ui.theme.MonoSmallStyle
@@ -114,7 +116,8 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel,
-    onLoginSuccess: (userId: Int) -> Unit
+    onLoginSuccess: (userId: Int) -> Unit,
+    onCreateAccount: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val focusManager = LocalFocusManager.current
@@ -234,6 +237,15 @@ fun LoginScreen(
                     } else {
                         Text("Sign in")
                     }
+                }
+
+                Spacer(Modifier.height(12.dp))
+                TextButton(
+                    onClick = onCreateAccount,
+                    enabled = !uiState.isLoading,
+                    modifier = Modifier.align(Alignment.CenterHorizontally).testTag("create-account-link")
+                ) {
+                    Text("New to Greywire? Create an account", color = GreywireCopper)
                 }
 
                 // Inside the scrolling column (not pinned to the bottom) so the

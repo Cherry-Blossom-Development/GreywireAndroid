@@ -22,10 +22,13 @@ import com.cherryblossomdev.greywire.ui.screens.LegalViewModel
 import com.cherryblossomdev.greywire.ui.screens.LoginScreen
 import com.cherryblossomdev.greywire.ui.screens.LoginViewModel
 import com.cherryblossomdev.greywire.ui.screens.PrivacyPolicyScreen
+import com.cherryblossomdev.greywire.ui.screens.SignupScreen
+import com.cherryblossomdev.greywire.ui.screens.SignupViewModel
 import kotlinx.coroutines.launch
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
+    object Signup : Screen("signup")
     object EulaGate : Screen("eula-gate")
     object Home : Screen("home")
     object ClaimPedal : Screen("claim-pedal")
@@ -64,6 +67,22 @@ fun GreywireNavGraph(navController: NavHostController = rememberNavController())
             LoginScreen(
                 viewModel = viewModel,
                 onLoginSuccess = { userId ->
+                    currentUserId.intValue = userId
+                    navController.navigate(Screen.EulaGate.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                    }
+                },
+                onCreateAccount = { navController.navigate(Screen.Signup.route) }
+            )
+        }
+
+        composable(Screen.Signup.route) {
+            val viewModel = remember { SignupViewModel(deps.authRepository) }
+            SignupScreen(
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() },
+                // Signed in: on to the EULA step, with Login and Signup gone from the back stack
+                onSignupSuccess = { userId ->
                     currentUserId.intValue = userId
                     navController.navigate(Screen.EulaGate.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }

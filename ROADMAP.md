@@ -36,7 +36,7 @@ The backend serves both sites and works out the site from the `X-Site` header (n
 
 | Step | Backend | Web | Android | iPhone |
 |------|---------|-----|---------|--------|
-| 1.1 Sign up (client-side password hashing, like Prosaurus) | done | done | todo | todo |
+| 1.1 Sign up (client-side password hashing, like Prosaurus) | done | done | done | todo |
 | 1.2 Email verification flow after sign up | done | done | todo | todo |
 | 1.3 Forgot password (`/api/auth/forgot-password`) | done | done | todo | todo |
 | 1.4 Claim a pedal: serial entry (`POST /api/greywire/claim`, 10 failed/hour limit) | done | done | done | todo |
@@ -120,6 +120,7 @@ Notes:
 Newest first. One line per finished step, with the commit.
 
 - 2026-11-17: 0.1 Android: `X-Site: greywire` added in `RetrofitClient`. Checked: login and claim work against the local test backend with it.
+- 2026-11-17: 1.1 Android: Sign up (`SignupScreen.kt`), linked from Login; afterwards the EULA step, then Home. Tested on the emulator: mismatched passwords, a taken username (409), and a new account (recorded as `signup_site = greywire`, `signup_platform = android`, put in the three Greywire rooms). The account starts unverified; the verification email links to the website (see 1.2).
 - 2026-11-17: 1.4 Android: Claim a pedal screen (`ClaimPedalScreen.kt`), reached from Home's membership card. Tested on the emulator against the local test backend: bad format, unknown serial, a valid claim (typed with dashes, lowercase), Home updating to Member, and re-claiming your own pedal.
 - 2026-11-17: Decisions recorded: Greywire open to non-pedal musicians (free tier + subscription), lyrics shared.
 - 2026-11-17: Roadmap written.
