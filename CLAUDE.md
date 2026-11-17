@@ -27,7 +27,7 @@ Foundation built 2026-11-09: login and a home screen.
 - **Legal** (2026-11-16, matching GreywireiPhone): Home has a "Terms and policies" card leading to Legal Documents, which shows the EULA's acceptance status (`GET /api/eula/status`) and the Privacy Policy. Both documents are in-app screens (`LegalDocuments.kt`) with the same text as the web versions at community.greywirestudio.com; if that text changes, update both apps. - **EULA accept step** (2026-11-16, both apps): every signed-in launch, and every login, goes through `EulaGate` before Home. If `GET /api/eula/status` says the EULA isn't accepted, the user sees the EULA with a pinned footer: "Accept These Terms" (`POST /api/eula/accept`, then Home) or "Decline and sign out". A 401 signs out; any other error lets the user through, as Prosaurus does. Acceptance isn't cached on the device, so it's checked on each launch.
 - If the saved token is rejected (401), the app signs out and goes back to Login.
 
-**Future work is tracked in `TODO.md`**, including sign up, forgot password, pedal claiming, push notifications, release signing and E2E tests. Keep it up to date as items are done or found.
+**The feature plan is `ROADMAP.md`**: phases and steps, with the status of each step in Backend, Web, Android and iPhone. Update it whenever a step is done. **Smaller loose ends are tracked in `TODO.md`**, including sign up, forgot password, pedal claiming, push notifications, release signing and E2E tests. Keep it up to date as items are done or found.
 
 ## Code layout (`app/src/main/java/com/cherryblossomdev/greywire/`)
 
