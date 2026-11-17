@@ -10,6 +10,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.cherryblossomdev.greywire.AppContainer
+import com.cherryblossomdev.greywire.ui.screens.ClaimPedalScreen
+import com.cherryblossomdev.greywire.ui.screens.ClaimPedalViewModel
 import com.cherryblossomdev.greywire.ui.screens.EulaGateScreen
 import com.cherryblossomdev.greywire.ui.screens.EulaGateViewModel
 import com.cherryblossomdev.greywire.ui.screens.EulaScreen
@@ -26,6 +28,7 @@ sealed class Screen(val route: String) {
     object Login : Screen("login")
     object EulaGate : Screen("eula-gate")
     object Home : Screen("home")
+    object ClaimPedal : Screen("claim-pedal")
     object Legal : Screen("legal")
     object Eula : Screen("eula")
     object PrivacyPolicy : Screen("privacy-policy")
@@ -90,7 +93,19 @@ fun GreywireNavGraph(navController: NavHostController = rememberNavController())
                 viewModel = viewModel,
                 onLogout = ::performLogout,
                 onSessionExpired = ::performLogout,
-                onOpenLegal = { navController.navigate(Screen.Legal.route) }
+                onOpenLegal = { navController.navigate(Screen.Legal.route) },
+                onClaimPedal = { navController.navigate(Screen.ClaimPedal.route) }
+            )
+        }
+
+        composable(Screen.ClaimPedal.route) {
+            val viewModel = remember { ClaimPedalViewModel(deps.greywireRepository) }
+            ClaimPedalScreen(
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() },
+                // Home reloads the membership when it comes back on screen
+                onDone = { navController.popBackStack() },
+                onSessionExpired = ::performLogout
             )
         }
 

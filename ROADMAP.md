@@ -38,7 +38,7 @@ The backend serves both sites and works out the site from the `X-Site` header (n
 | 1.1 Sign up (client-side password hashing, like Prosaurus) | done | done | todo | todo |
 | 1.2 Email verification flow after sign up | done | done | todo | todo |
 | 1.3 Forgot password (`/api/auth/forgot-password`) | done | done | todo | todo |
-| 1.4 Claim a pedal: serial entry (`POST /api/greywire/claim`, 10 failed/hour limit) | done | done | todo | todo |
+| 1.4 Claim a pedal: serial entry (`POST /api/greywire/claim`, 10 failed/hour limit) | done | done | done | todo |
 | 1.5 Claim a pedal: QR scan | ? | n/a | todo | todo |
 | 1.6 Open Greywire to non-members: remove members-only gating (`greywireAccess.js`, web `requiresMember`) | todo | todo | n/a | n/a |
 | 1.7 Guest accounts (`isGuest`, can never be members) | done | ? | todo | todo |
@@ -119,5 +119,6 @@ Notes:
 Newest first. One line per finished step, with the commit.
 
 - 2026-11-17: 0.1 Android: `X-Site: greywire` added in `RetrofitClient`. Builds; not yet checked against a running backend.
+- 2026-11-17: 1.4 Android: Claim a pedal screen (`ClaimPedalScreen.kt`), reached from Home's membership card. Builds; not yet tried against a running backend.
 - 2026-11-17: Decisions recorded: Greywire open to non-pedal musicians (free tier + subscription), lyrics shared.
 - 2026-11-17: Roadmap written.

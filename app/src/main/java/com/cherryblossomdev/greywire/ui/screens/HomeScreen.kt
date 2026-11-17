@@ -39,6 +39,7 @@ import com.cherryblossomdev.greywire.data.AuthResult
 import com.cherryblossomdev.greywire.data.GreywireRepository
 import com.cherryblossomdev.greywire.network.MembershipResponse
 import com.cherryblossomdev.greywire.ui.components.Eyebrow
+import com.cherryblossomdev.greywire.ui.components.GreywireButton
 import com.cherryblossomdev.greywire.ui.components.GreywireCard
 import com.cherryblossomdev.greywire.ui.components.GreywireGhostButton
 import com.cherryblossomdev.greywire.ui.components.GreywireHeader
@@ -121,7 +122,8 @@ fun HomeScreen(
     viewModel: HomeViewModel,
     onLogout: () -> Unit,
     onSessionExpired: () -> Unit,
-    onOpenLegal: () -> Unit
+    onOpenLegal: () -> Unit,
+    onClaimPedal: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -165,7 +167,7 @@ fun HomeScreen(
             Eyebrow("Membership")
             SectionHeading("Your Greywire account")
             Spacer(Modifier.height(16.dp))
-            MembershipCard(uiState)
+            MembershipCard(uiState, onClaimPedal)
             Spacer(Modifier.height(40.dp))
 
             // Pedals (`#pedals`)
@@ -210,7 +212,7 @@ private fun SectionDivider() {
 }
 
 @Composable
-private fun MembershipCard(uiState: HomeUiState) {
+private fun MembershipCard(uiState: HomeUiState, onClaimPedal: () -> Unit) {
     GreywireCard(modifier = Modifier.testTag("membership-card")) {
         val membership = uiState.membership
         when {
@@ -251,15 +253,23 @@ private fun MembershipCard(uiState: HomeUiState) {
                         }
                     }
                 }
+                Spacer(Modifier.height(16.dp))
+                GreywireGhostButton(onClick = onClaimPedal, modifier = Modifier.testTag("claim-pedal-button")) {
+                    Text("Claim another pedal", style = MaterialTheme.typography.labelMedium)
+                }
             }
             else -> {
                 StatusPill("Not a member yet")
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    text = "Greywire membership comes with a Greywire pedal. Once you own one, claim it with its serial number to join.",
+                    text = "Every Greywire pedal comes with a free membership. Claim yours with its serial number.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = GreywireMuted
                 )
+                Spacer(Modifier.height(16.dp))
+                GreywireButton(onClick = onClaimPedal, modifier = Modifier.testTag("claim-pedal-button")) {
+                    Text("Claim a pedal")
+                }
             }
         }
     }
