@@ -7,7 +7,10 @@ import com.cherryblossomdev.greywire.network.EulaStatusResponse
 import com.cherryblossomdev.greywire.network.ErrorResponse
 import com.cherryblossomdev.greywire.network.LoginRequest
 import com.cherryblossomdev.greywire.network.MeResponse
+import com.cherryblossomdev.greywire.network.SignupRequest
 import com.google.gson.Gson
+import java.security.MessageDigest
+import java.security.SecureRandom
 
 sealed class AuthResult<out T> {
     data class Success<T>(val data: T) : AuthResult<T>()
@@ -38,6 +41,44 @@ class AuthRepository(
                 }
             } else {
                 AuthResult.Error(parseError(response.errorBody()?.string(), "Login failed"))
+            }
+        } catch (e: Exception) {
+            AuthResult.Error(e.message ?: "Network error")
+        }
+    }
+
+    /**
+     * Creates an account and signs it in. With X-Site: greywire the backend
+     * records Greywire as the signup site and sends Greywire's verification email.
+     */
+    suspend fun signup(
+        handle: String,
+        firstName: String,
+        lastName: String,
+        email: String,
+        password: String
+    ): AuthResult<AuthResponse> {
+        return try {
+            val salt = generateSalt()
+            val response = apiService.signup(
+                SignupRequest(
+                    handle = handle.trim(),
+                    first_name = firstName.trim(),
+                    last_name = lastName.trim(),
+                    email = email.trim(),
+                    hash = hashPassword(password, salt),
+                    salt = salt
+                )
+            )
+            val body = response.body()
+            if (response.isSuccessful && body?.token != null) {
+                tokenManager.saveToken(body.token)
+                tokenManager.saveUsername(handle.trim())
+                AuthResult.Success(body)
+            } else if (response.isSuccessful) {
+                AuthResult.Error("Account created, but no token was received. Try signing in.")
+            } else {
+                AuthResult.Error(parseError(response.errorBody()?.string(), "Couldn't create the account"))
             }
         } catch (e: Exception) {
             AuthResult.Error(e.message ?: "Network error")
@@ -107,6 +148,18 @@ class AuthRepository(
     fun isLoggedIn(): Boolean = tokenManager.isLoggedIn()
 
     fun getStoredUsername(): String? = tokenManager.getUsername()
+
+    // Password hashing, matching the Prosaurus app and the website (SignupForm.vue)
+    private fun generateSalt(): String {
+        val bytes = ByteArray(16)
+        SecureRandom().nextBytes(bytes)
+        return bytes.joinToString("") { "%02x".format(it) }
+    }
+
+    private fun hashPassword(password: String, salt: String): String =
+        MessageDigest.getInstance("SHA-256")
+            .digest((password + salt).toByteArray())
+            .joinToString("") { "%02x".format(it) }
 
     private fun parseError(errorBody: String?, fallback: String): String = try {
         Gson().fromJson(errorBody, ErrorResponse::class.java)?.message ?: fallback

@@ -15,6 +15,17 @@ data class LoginRequest(
     val password: String
 )
 
+// The password is hashed on the device (SHA-256 of password + salt), as the
+// Prosaurus app and website do; the backend stores hash and salt as given.
+data class SignupRequest(
+    val handle: String,
+    val first_name: String,
+    val last_name: String,
+    val email: String,
+    val hash: String,
+    val salt: String
+)
+
 data class AuthResponse(
     val message: String,
     val token: String? = null
@@ -47,6 +58,10 @@ interface ApiService {
 
     @POST("api/auth/login")
     suspend fun login(@Body request: LoginRequest): Response<AuthResponse>
+
+    // 201 with a token (the new user is signed in), or 409 if the handle or email is taken
+    @POST("api/auth/signup")
+    suspend fun signup(@Body request: SignupRequest): Response<AuthResponse>
 
     @GET("api/auth/me")
     suspend fun getMe(@Header("Authorization") token: String): Response<MeResponse>
