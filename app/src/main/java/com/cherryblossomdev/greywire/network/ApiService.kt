@@ -26,6 +26,8 @@ data class SignupRequest(
     val salt: String
 )
 
+data class ForgotPasswordRequest(val email: String)
+
 data class AuthResponse(
     val message: String,
     val token: String? = null
@@ -62,6 +64,11 @@ interface ApiService {
     // 201 with a token (the new user is signed in), or 409 if the handle or email is taken
     @POST("api/auth/signup")
     suspend fun signup(@Body request: SignupRequest): Response<AuthResponse>
+
+    // Emails a reset link (to the website, for now). Always 200 for a well-formed
+    // request, whether or not the email is registered, so accounts can't be probed.
+    @POST("api/auth/forgot-password")
+    suspend fun forgotPassword(@Body request: ForgotPasswordRequest): Response<AuthResponse>
 
     @GET("api/auth/me")
     suspend fun getMe(@Header("Authorization") token: String): Response<MeResponse>

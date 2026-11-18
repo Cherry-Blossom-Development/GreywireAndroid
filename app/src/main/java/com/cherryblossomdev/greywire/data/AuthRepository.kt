@@ -5,6 +5,7 @@ import com.cherryblossomdev.greywire.network.AuthResponse
 import com.cherryblossomdev.greywire.network.EulaAcceptResponse
 import com.cherryblossomdev.greywire.network.EulaStatusResponse
 import com.cherryblossomdev.greywire.network.ErrorResponse
+import com.cherryblossomdev.greywire.network.ForgotPasswordRequest
 import com.cherryblossomdev.greywire.network.LoginRequest
 import com.cherryblossomdev.greywire.network.MeResponse
 import com.cherryblossomdev.greywire.network.SignupRequest
@@ -79,6 +80,24 @@ class AuthRepository(
                 AuthResult.Error("Account created, but no token was received. Try signing in.")
             } else {
                 AuthResult.Error(parseError(response.errorBody()?.string(), "Couldn't create the account"))
+            }
+        } catch (e: Exception) {
+            AuthResult.Error(e.message ?: "Network error")
+        }
+    }
+
+    /**
+     * Asks the backend to email a password reset link. With X-Site: greywire it
+     * sends Greywire's template, whose link opens the Greywire website.
+     */
+    suspend fun forgotPassword(email: String): AuthResult<AuthResponse> {
+        return try {
+            val response = apiService.forgotPassword(ForgotPasswordRequest(email.trim()))
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                AuthResult.Success(body)
+            } else {
+                AuthResult.Error(parseError(response.errorBody()?.string(), "Couldn't send the reset link"))
             }
         } catch (e: Exception) {
             AuthResult.Error(e.message ?: "Network error")
