@@ -117,7 +117,8 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
 fun LoginScreen(
     viewModel: LoginViewModel,
     onLoginSuccess: (userId: Int) -> Unit,
-    onCreateAccount: () -> Unit
+    onCreateAccount: () -> Unit,
+    onForgotPassword: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val focusManager = LocalFocusManager.current
@@ -208,6 +209,14 @@ fun LoginScreen(
                     }),
                     enabled = !uiState.isLoading
                 )
+
+                TextButton(
+                    onClick = onForgotPassword,
+                    enabled = !uiState.isLoading,
+                    modifier = Modifier.align(Alignment.End).testTag("forgot-password-link")
+                ) {
+                    Text("Forgot password?", color = GreywireCopper)
+                }
 
                 uiState.errorMessage?.let { error ->
                     Spacer(Modifier.height(16.dp))

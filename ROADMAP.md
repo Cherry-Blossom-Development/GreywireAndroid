@@ -15,14 +15,14 @@ Small loose ends (polish, dev notes) stay in `TODO.md`. Update this file as each
 
 **Status key:** `done` · `wip` · `todo` · `n/a` (nothing needed in that project) · `?` (not yet checked)
 
-## Where we left off (2026-11-17)
+## Where we left off (updated 2026-11-18)
 
-**Done on Android:** 0.1 `X-Site: greywire`, 1.4 Claim a pedal, 1.1 Sign up. All pushed and tested on the emulator against the local test backend.
+**Done on Android:** 0.1 `X-Site: greywire`, 1.4 Claim a pedal, 1.1 Sign up, 1.3 Forgot password (2026-11-18). All pushed and tested on the emulator against the local test backend.
 
 
-**Next up:** 1.3 Forgot password on Android, the same way as Prosaurus (`ForgotPasswordScreen`, `/api/auth/forgot-password`).
+**Next up:** to be decided (see the end of the 2026-11-18 session).
 
-**Waiting for iPhone (on the Mac):** 0.1, 1.1 and 1.4 are done on Android, not yet on iPhone.
+**Waiting for iPhone (on the Mac):** 0.1, 1.1, 1.3 and 1.4 are done on Android, not yet on iPhone.
 
 **Test environment state:**
 - `breakroom_test`: `testuser` holds test pedal `00000000000000A1` (it's a member), and there's a test account `gwtest073722`. `npx ts-node database/setup.ts` in BreakTest resets everything.
@@ -54,7 +54,7 @@ The backend serves both sites and works out the site from the `X-Site` header (n
 |------|---------|-----|---------|--------|
 | 1.1 Sign up (client-side password hashing, like Prosaurus) | done | done | done | todo |
 | 1.2 Email verification: the email's link opens the website (no deep links for now) | done | done | n/a | n/a |
-| 1.3 Forgot password (`/api/auth/forgot-password`) | done | done | todo | todo |
+| 1.3 Forgot password (`/api/auth/forgot-password`; the reset link opens the website) | done | done | done | todo |
 | 1.4 Claim a pedal: serial entry (`POST /api/greywire/claim`, 10 failed/hour limit) | done | done | done | todo |
 | 1.5 Claim a pedal: QR scan | ? | n/a | todo | todo |
 | 1.6 Open Greywire to non-members: remove members-only gating (`greywireAccess.js`, web `requiresMember`) | todo | todo | n/a | n/a |
@@ -128,6 +128,7 @@ Lyrics are shared between sites (decided 2026-11-17). Band pages hang off bands,
 Notes:
 - **5.1**: Firebase isn't set up (no `google-services.json`). Prosaurus registers its FCM token on login and removes it on logout; do the same.
 - **5.4**: `BreakTest/database/seed-data.sql` now has two unclaimed test pedals (`00000000000000A1`, `00000000000000A2`, Flashover) for testing the claim flow. Still needed: a user who is already a member when the tests start (a grant or a claimed pedal). Until then, Home's "Member" state has only been checked in code, not on screen.
+- **5.4**: `seed-data.sql` has only the Prosaurus email templates, so in tests a Greywire request falls back to them (the reset email says Breakroom and links to local.prosaurus.com). Add the Greywire `signup_verification` and `password_reset` templates (Breakroom migration 091) to the seed.
 - **5.5**: the test tags are listed in `CLAUDE.md`. Use `mobile: clearApp` with appId `com.cherryblossomdev.greywire` between tests.
 - **4.3 / 4.4**: the Flashover and Switchyard cards on Home are hard-coded text copied from the website. The website's pedal SVGs are in `../GreywireStudio-Website/img/`.
 
@@ -136,6 +137,7 @@ Notes:
 Newest first. One line per finished step, with the commit.
 
 - 2026-11-17: 0.1 Android: `X-Site: greywire` added in `RetrofitClient`. Checked: login and claim work against the local test backend with it.
+- 2026-11-18: 1.3 Android: Forgot password (`ForgotPasswordScreen.kt`), linked from Login. Tested on the emulator: invalid email, a registered email (reset email written by the test backend), an unknown email (same message, as the backend intends), and back to sign in.
 - 2026-11-17: 1.1 Android: Sign up (`SignupScreen.kt`), linked from Login; afterwards the EULA step, then Home. Tested on the emulator: mismatched passwords, a taken username (409), and a new account (recorded as `signup_site = greywire`, `signup_platform = android`, put in the three Greywire rooms). The account starts unverified; the verification email links to the website (see 1.2).
 - 2026-11-17: 1.4 Android: Claim a pedal screen (`ClaimPedalScreen.kt`), reached from Home's membership card. Tested on the emulator against the local test backend: bad format, unknown serial, a valid claim (typed with dashes, lowercase), Home updating to Member, and re-claiming your own pedal.
 - 2026-11-17: Decisions recorded: Greywire open to non-pedal musicians (free tier + subscription), lyrics shared.

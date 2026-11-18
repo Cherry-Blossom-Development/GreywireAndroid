@@ -15,6 +15,8 @@ import com.cherryblossomdev.greywire.ui.screens.ClaimPedalViewModel
 import com.cherryblossomdev.greywire.ui.screens.EulaGateScreen
 import com.cherryblossomdev.greywire.ui.screens.EulaGateViewModel
 import com.cherryblossomdev.greywire.ui.screens.EulaScreen
+import com.cherryblossomdev.greywire.ui.screens.ForgotPasswordScreen
+import com.cherryblossomdev.greywire.ui.screens.ForgotPasswordViewModel
 import com.cherryblossomdev.greywire.ui.screens.HomeScreen
 import com.cherryblossomdev.greywire.ui.screens.HomeViewModel
 import com.cherryblossomdev.greywire.ui.screens.LegalScreen
@@ -29,6 +31,7 @@ import kotlinx.coroutines.launch
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Signup : Screen("signup")
+    object ForgotPassword : Screen("forgot-password")
     object EulaGate : Screen("eula-gate")
     object Home : Screen("home")
     object ClaimPedal : Screen("claim-pedal")
@@ -72,7 +75,16 @@ fun GreywireNavGraph(navController: NavHostController = rememberNavController())
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
                 },
-                onCreateAccount = { navController.navigate(Screen.Signup.route) }
+                onCreateAccount = { navController.navigate(Screen.Signup.route) },
+                onForgotPassword = { navController.navigate(Screen.ForgotPassword.route) }
+            )
+        }
+
+        composable(Screen.ForgotPassword.route) {
+            val viewModel = remember { ForgotPasswordViewModel(deps.authRepository) }
+            ForgotPasswordScreen(
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() }
             )
         }
 
