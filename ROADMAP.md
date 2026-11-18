@@ -19,8 +19,6 @@ Small loose ends (polish, dev notes) stay in `TODO.md`. Update this file as each
 
 **Done on Android:** 0.1 `X-Site: greywire`, 1.4 Claim a pedal, 1.1 Sign up. All pushed and tested on the emulator against the local test backend.
 
-**Waiting on answers:**
-- **1.2 Email verification:** new accounts start unverified, and the email links to the website. Is that enough, or should the app open the link itself (deep links, plus a backend email template change)?
 
 **Next up:** 1.3 Forgot password on Android, the same way as Prosaurus (`ForgotPasswordScreen`, `/api/auth/forgot-password`).
 
@@ -37,6 +35,7 @@ Small loose ends (polish, dev notes) stay in `TODO.md`. Update this file as each
 - **2026-11-17: Greywire is for the whole band, not only pedal owners.** Buying a pedal and claiming its serial gives a free membership (no limits). Musicians who don't need a pedal (drummers, singers...) can still use Greywire the way people use Prosaurus: limited free use, then a **Greywire Studio subscription** with exactly the same limits and price as the Prosaurus subscription. This replaces the earlier "members only" rule, so the backend's `greywireAccess` middleware, the web route guard and the EULA ("The community is open to members only") all need changing (steps 1.6 to 1.11).
 - **2026-11-17: One subscription for both sites.** Subscribing to Prosaurus or to Greywire Studio is the same subscription and covers both.
 - **2026-11-17: Lyrics are shared between Prosaurus and Greywire**, like profiles and friends. `routes/lyrics.js` already works that way.
+- **2026-11-18: Email links open the website for now.** The verification and password reset emails link to the website, not the app. Deep links can come later.
 - **2026-11-17: Switchyard connectivity (4.6) waits** until the hardware is further along.
 
 ## Phase 0: Requests count as Greywire
@@ -54,7 +53,7 @@ The backend serves both sites and works out the site from the `X-Site` header (n
 | Step | Backend | Web | Android | iPhone |
 |------|---------|-----|---------|--------|
 | 1.1 Sign up (client-side password hashing, like Prosaurus) | done | done | done | todo |
-| 1.2 Email verification flow after sign up | done | done | todo | todo |
+| 1.2 Email verification: the email's link opens the website (no deep links for now) | done | done | n/a | n/a |
 | 1.3 Forgot password (`/api/auth/forgot-password`) | done | done | todo | todo |
 | 1.4 Claim a pedal: serial entry (`POST /api/greywire/claim`, 10 failed/hour limit) | done | done | done | todo |
 | 1.5 Claim a pedal: QR scan | ? | n/a | todo | todo |
