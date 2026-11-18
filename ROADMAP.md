@@ -15,26 +15,48 @@ Small loose ends (polish, dev notes) stay in `TODO.md`. Update this file as each
 
 **Status key:** `done` · `wip` · `todo` · `n/a` (nothing needed in that project) · `?` (not yet checked)
 
-## Where we left off (updated 2026-11-18)
+## Where we left off (updated 2026-11-18, end of day)
 
-**Done on Android:** 0.1 `X-Site: greywire`, 1.4 Claim a pedal, 1.1 Sign up, 1.3 Forgot password (2026-11-18). All pushed and tested on the emulator against the local test backend.
+**Done on Android:** 0.1 `X-Site: greywire`, 1.1 Sign up, 1.3 Forgot password, 1.4 Claim a pedal. All pushed and tested on the emulator against the local test backend.
 
+**In progress: 1.6 Open Greywire to non-members (Breakroom).** Five commits in Breakroom, **committed locally, not pushed or deployed**:
+- `d992f67` migration **097** (`users.greywire_joined_at`) and helpers `greywireUserSql` / `isGreywireUser` / `ensureGreywireUser` in `backend/utilities/greywire.js`
+- `59766bc` `greywireAccess.js` and the socket check let in any non-guest account and record it as a Greywire user (first time: joins the Greywire default rooms)
+- `bb99148` friends, search, profiles and band invites on Greywire show Greywire users (used Greywire, or a member)
+- `990ce05` web: route guard, layout and services block only guests; sign up goes to chat; band invites don't need a pedal; App.vue watches only the username (so claiming doesn't start services twice)
+- `df6d4dd` web wording: Greywire home, claim page, band invite, email-verified message, Claim link on Billing & Membership
 
-**Next up:** to be decided (see the end of the 2026-11-18 session).
+Tested against the test backend (`testadmin`, a Prosaurus-only non-member, can use Greywire and was recorded; a Prosaurus-only account is hidden on Greywire). Migration 097 is applied to **`breakroom_test` only**.
+
+**Waiting on answers:**
+1. **Legal text (1.12)**: draft below, needs approval. Then update the web (`EulaPage.vue`, `PrivacyPolicyPage.vue`) and Android (`LegalDocuments.kt`) in matching commits; iPhone later.
+2. **Deploy**: push Breakroom, apply migration 097 to production `breakroom`, deploy backend and frontend. Who runs it?
+
+**Draft legal changes (Greywire versions only; effective date November 18, 2026 on both):**
+- EULA section 3 becomes "Free Accounts, Subscriptions and Greywire Membership": "Anyone with a full account can use the community. Free accounts have limits on recordings and bands. A subscription removes them; it is the same subscription as Prosaurus, so one subscription covers both sites. Greywire members have no limits and pay nothing: membership is free and comes with a Greywire Studio pedal. You become a member by claiming your pedal's serial number, or by invitation from us." Bullets: *One account per serial* ends "...or sharing one so others can avoid the limits, is a violation of this Agreement."; *Membership follows the pedal* ends "...your account then loses membership, and the free limits apply again, unless you hold another pedal, an invitation or a subscription."; *Revocation* and *The community only* unchanged.
+- EULA section 4 adds: "A subscription also covers your account on both sites."
+- Privacy Policy, Payment Information: "Greywire membership is free, and we collect no payment details for it. If you subscribe (one subscription covers Greywire and Prosaurus), billing details are processed by our payment provider or app store. We do not store full payment card numbers on our servers."
+- Privacy Policy, With Other Users: "visible to other members" becomes "visible to other Greywire users".
+- Not covered (separate decision): subscription renewal and cancellation terms; neither EULA has them.
+
+**After 1.6:** Phase 2 on Android: 2.1 navigation shell, then 2.2 Sessions.
+
+**Known test environment problems (fix before testing Sessions):** `/api/sessions` returns 500 in the test backend, on Prosaurus too: `breakroom_test` lacks migration 096 (`sessions.duration_ms`), and the test image lacks the `@tus/server` package.
 
 **Waiting for iPhone (on the Mac):** 0.1, 1.1, 1.3 and 1.4 are done on Android, not yet on iPhone.
 
 **Test environment state:**
-- `breakroom_test`: `testuser` holds test pedal `00000000000000A1` (it's a member), and there's a test account `gwtest073722`. `npx ts-node database/setup.ts` in BreakTest resets everything.
-- To test again: start Docker Desktop, then from `../Breakroom` load `.env.test` and run `docker compose -f docker-compose.test.yml up -d backend-test`; start the `Pixel_9_API_35` emulator.
+- `breakroom_test`: migration 097 applied. `testuser` holds test pedal `00000000000000A1` (member); `testadmin` is now a Greywire user (non-member); test account `gwtest073722` exists. `npx ts-node database/setup.ts` in BreakTest resets everything (it syncs the schema from production, so 097 would be lost until production has it).
+- To test again: start Docker Desktop, then from `../Breakroom` load `.env.test` and run `docker compose -f docker-compose.test.yml up -d --build backend-test`; start the `Pixel_9_API_35` emulator.
 
-**Working style agreed:** small commits, one change each; push after each finished step; update this file as steps finish.
+**Working style agreed:** small commits, one change each; push after each finished step (today's Breakroom work: committed locally only, as asked); update this file as steps finish.
 
 ## Decisions
 
 - **2026-11-17: Greywire is for the whole band, not only pedal owners.** Buying a pedal and claiming its serial gives a free membership (no limits). Musicians who don't need a pedal (drummers, singers...) can still use Greywire the way people use Prosaurus: limited free use, then a **Greywire Studio subscription** with exactly the same limits and price as the Prosaurus subscription. This replaces the earlier "members only" rule, so the backend's `greywireAccess` middleware, the web route guard and the EULA ("The community is open to members only") all need changing (steps 1.6 to 1.11).
 - **2026-11-17: One subscription for both sites.** Subscribing to Prosaurus or to Greywire Studio is the same subscription and covers both.
 - **2026-11-17: Lyrics are shared between Prosaurus and Greywire**, like profiles and friends. `routes/lyrics.js` already works that way.
+- **2026-11-18: Greywire users.** Friends, search, profiles and band invites on Greywire show accounts that have used Greywire (signed up, signed in or made a request there) or are members, not every account. Recorded in `users.greywire_joined_at` (migration 097).
 - **2026-11-18: Email links open the website for now.** The verification and password reset emails link to the website, not the app. Deep links can come later.
 - **2026-11-17: Switchyard connectivity (4.6) waits** until the hardware is further along.
 
@@ -57,13 +79,13 @@ The backend serves both sites and works out the site from the `X-Site` header (n
 | 1.3 Forgot password (`/api/auth/forgot-password`; the reset link opens the website) | done | done | done | todo |
 | 1.4 Claim a pedal: serial entry (`POST /api/greywire/claim`, 10 failed/hour limit) | done | done | done | todo |
 | 1.5 Claim a pedal: QR scan | ? | n/a | todo | todo |
-| 1.6 Open Greywire to non-members: remove members-only gating (`greywireAccess.js`, web `requiresMember`) | todo | todo | n/a | n/a |
+| 1.6 Open Greywire to non-members: remove members-only gating (`greywireAccess.js`, web `requiresMember`) | wip (committed, not deployed) | wip (committed, not deployed) | n/a | n/a |
 | 1.7 Guest accounts (`isGuest`, can never be members) | done | ? | todo | todo |
 | 1.8 One subscription for both sites (Prosaurus and Greywire Studio) | done | ? | n/a | n/a |
 | 1.9 Free-tier limits on Greywire: members unlimited, others like Prosaurus (sessions 3+3, bands 1) | done | ? | n/a | n/a |
 | 1.10 Paywall: handle 402 `requiresSubscription`, show plan status (`/api/billing/plan`) | done | ? | todo | todo |
 | 1.11 In-app purchase (Google Play Billing / StoreKit) and backend verification for the Greywire app IDs | todo | n/a | todo | todo |
-| 1.12 EULA / Privacy Policy: no longer members-only; add the subscription terms | n/a | todo | todo | todo |
+| 1.12 EULA / Privacy Policy: no longer members-only; add the subscription terms | n/a | wip (draft) | wip (draft) | todo |
 
 Notes:
 - **1.6**: until this is done on the backend, a non-member using the app gets 403 `GREYWIRE_MEMBERSHIP_REQUIRED` on everything outside `/api/auth`, `/api/greywire` and `/api/eula`.
