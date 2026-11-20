@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -120,7 +120,6 @@ private val LineworkPedals = listOf(
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel,
-    onLogout: () -> Unit,
     onSessionExpired: () -> Unit,
     onOpenLegal: () -> Unit,
     onClaimPedal: () -> Unit
@@ -132,12 +131,9 @@ fun HomeScreen(
         if (uiState.sessionExpired) onSessionExpired()
     }
 
-    Column(modifier = Modifier.fillMaxSize().systemBarsPadding()) {
-        GreywireHeader(action = {
-            GreywireGhostButton(onClick = onLogout, modifier = Modifier.testTag("logout-button")) {
-                Text("Sign out", style = MaterialTheme.typography.labelMedium)
-            }
-        })
+    // A tab: the bottom bar takes care of the navigation bar inset. Sign out is on Profile.
+    Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
+        GreywireHeader()
 
         Column(
             modifier = Modifier
