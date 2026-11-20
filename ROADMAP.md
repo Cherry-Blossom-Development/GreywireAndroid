@@ -32,7 +32,7 @@ Migration 097 is applied to production `breakroom` (1 existing account was recor
 
 **Done: 2.1 navigation shell on Android** (2026-11-20): five bottom tabs, Home, Sessions, Chat, Friends, Profile (user's choice, matching the web menu). Sign out moved to Profile.
 
-**Next:** 2.2 Sessions on Android (fills the Sessions tab, replacing the placeholder in `TabScreens.kt`). First fix the test environment (below): apply migration 096 to `breakroom_test` and rebuild the test image (`--build`) so it has `@tus/server`. The user asked to confirm before doing that.
+**Next:** 2.2 Sessions on Android (fills the Sessions tab, replacing the placeholder in `TabScreens.kt`). First fix the test environment (below): apply migration 096 to `breakroom_test` and rebuild the test image (`--build`) so it has `@tus/server`. (Asked the user on 2026-11-20; not answered yet.)
 
 **Known test environment problems (fix before testing Sessions):** `/api/sessions` returns 500 in the test backend, on Prosaurus too: `breakroom_test` lacks migration 096 (`sessions.duration_ms`), and the test image lacks the `@tus/server` package.
 
