@@ -30,11 +30,13 @@ Migration 097 is applied to production `breakroom` (1 existing account was recor
 
 **Done: 1.12 legal text**, deployed with 1.6: Breakroom `5e20ce0` and Android `3516bce`, effective November 20, 2026. The user approved the draft without reading it and will review it later. iPhone still needs to match. Not covered (separate decision): subscription renewal and cancellation terms; neither EULA has them.
 
-**Next:** Phase 2 on Android: 2.1 navigation shell, then 2.2 Sessions.
+**Done: 2.1 navigation shell on Android** (2026-11-20): five bottom tabs, Home, Sessions, Chat, Friends, Profile (user's choice, matching the web menu). Sign out moved to Profile.
+
+**Next:** 2.2 Sessions on Android (fills the Sessions tab). Fix the test environment first (below).
 
 **Known test environment problems (fix before testing Sessions):** `/api/sessions` returns 500 in the test backend, on Prosaurus too: `breakroom_test` lacks migration 096 (`sessions.duration_ms`), and the test image lacks the `@tus/server` package.
 
-**Waiting for iPhone (on the Mac):** 0.1, 1.1, 1.3, 1.4 and the 1.12 legal text are done on Android, not yet on iPhone.
+**Waiting for iPhone (on the Mac):** 0.1, 1.1, 1.3, 1.4, the 1.12 legal text and 2.1 (same five tabs) are done on Android, not yet on iPhone.
 
 **Test environment state:**
 - `breakroom_test`: migration 097 applied. `testuser` holds test pedal `00000000000000A1` (member); `testadmin` is now a Greywire user (non-member); test account `gwtest073722` exists. `npx ts-node database/setup.ts` in BreakTest resets everything (it syncs the schema from production, which now has 097).
@@ -91,7 +93,7 @@ Web routes: `/chat`, `/sessions`, `/friends`, `/user/:handle`, `/profile`. The P
 
 | Step | Backend | Web | Android | iPhone |
 |------|---------|-----|---------|--------|
-| 2.1 App navigation shell (somewhere to put the features below) | n/a | n/a | todo | todo |
+| 2.1 App navigation shell (somewhere to put the features below) | n/a | n/a | done | todo |
 | 2.2 Sessions: list, play/stream, upload, delete | done | done | todo | todo |
 | 2.3 Sessions: record in-app | n/a | ? | todo | todo |
 | 2.4 Sessions: comments, ratings, instrument tags, share links | done | done | todo | todo |
@@ -148,6 +150,9 @@ Notes:
 ## Log
 
 Newest first. One line per finished step, with the commit.
+
+- 2026-11-20: 2.1 Android: navigation shell, five bottom tabs (`ca10737`, `097c109`). Tested on the emulator: tabs switch, Back from a tab goes Home, Claim is full screen without the bar, Sign out on Profile goes to Login.
+- 2026-11-20: 1.6 and 1.12 deployed to production (Breakroom); 1.12 Android legal text `3516bce`.
 
 - 2026-11-17: 0.1 Android: `X-Site: greywire` added in `RetrofitClient`. Checked: login and claim work against the local test backend with it.
 - 2026-11-18: 1.3 Android: Forgot password (`ForgotPasswordScreen.kt`), linked from Login. Tested on the emulator: invalid email, a registered email (reset email written by the test backend), an unknown email (same message, as the backend intends), and back to sign in.
