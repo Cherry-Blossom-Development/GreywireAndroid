@@ -15,7 +15,7 @@ Small loose ends (polish, dev notes) stay in `TODO.md`. Update this file as each
 
 **Status key:** `done` · `wip` · `todo` · `n/a` (nothing needed in that project) · `?` (not yet checked)
 
-## Where we left off (updated 2026-11-20)
+## Where we left off (updated 2026-11-20, end of day)
 
 **Done on Android:** 0.1 `X-Site: greywire`, 1.1 Sign up, 1.3 Forgot password, 1.4 Claim a pedal. All pushed and tested on the emulator against the local test backend.
 
@@ -32,7 +32,7 @@ Migration 097 is applied to production `breakroom` (1 existing account was recor
 
 **Done: 2.1 navigation shell on Android** (2026-11-20): five bottom tabs, Home, Sessions, Chat, Friends, Profile (user's choice, matching the web menu). Sign out moved to Profile.
 
-**Next:** 2.2 Sessions on Android (fills the Sessions tab). Fix the test environment first (below).
+**Next:** 2.2 Sessions on Android (fills the Sessions tab, replacing the placeholder in `TabScreens.kt`). First fix the test environment (below): apply migration 096 to `breakroom_test` and rebuild the test image (`--build`) so it has `@tus/server`. The user asked to confirm before doing that.
 
 **Known test environment problems (fix before testing Sessions):** `/api/sessions` returns 500 in the test backend, on Prosaurus too: `breakroom_test` lacks migration 096 (`sessions.duration_ms`), and the test image lacks the `@tus/server` package.
 
