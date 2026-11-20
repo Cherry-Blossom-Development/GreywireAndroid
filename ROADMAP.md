@@ -19,29 +19,25 @@ Small loose ends (polish, dev notes) stay in `TODO.md`. Update this file as each
 
 **Done on Android:** 0.1 `X-Site: greywire`, 1.1 Sign up, 1.3 Forgot password, 1.4 Claim a pedal. All pushed and tested on the emulator against the local test backend.
 
-**In progress: 1.6 Open Greywire to non-members (Breakroom).** Five commits in Breakroom, **pushed but not deployed** (Breakroom has no CI, so pushing doesn't deploy):
+**Done: 1.6 Open Greywire to non-members (Breakroom)**, deployed to production 2026-11-20:
 - `d992f67` migration **097** (`users.greywire_joined_at`) and helpers `greywireUserSql` / `isGreywireUser` / `ensureGreywireUser` in `backend/utilities/greywire.js`
 - `59766bc` `greywireAccess.js` and the socket check let in any non-guest account and record it as a Greywire user (first time: joins the Greywire default rooms)
 - `bb99148` friends, search, profiles and band invites on Greywire show Greywire users (used Greywire, or a member)
 - `990ce05` web: route guard, layout and services block only guests; sign up goes to chat; band invites don't need a pedal; App.vue watches only the username (so claiming doesn't start services twice)
 - `df6d4dd` web wording: Greywire home, claim page, band invite, email-verified message, Claim link on Billing & Membership
 
-Tested against the test backend (`testadmin`, a Prosaurus-only non-member, can use Greywire and was recorded; a Prosaurus-only account is hidden on Greywire). Migration 097 is applied to **`breakroom_test` only**.
+Migration 097 is applied to production `breakroom` (1 existing account was recorded as a Greywire user) and to `breakroom_test`. Before deploying, checked that none of it affects Prosaurus: every backend change is behind `req.site === 'greywire'` or the socket's site check, and every web change is behind `isGreywire`. community.greywirestudio.com serves the same build as prosaurus.com (`/var/www/prosaurus.com`), so one frontend upload covers both.
 
-**Waiting on**Legal text (1.12) done** on 2026-11-20 (user said go ahead with the draft and will review it later): Breakroom `5e20ce0` (web, not deployed) and Android `3516bce`. Effective date November 20, 2026 on both Greywire documents. iPhone still to match. Not covered (separate decision): subscription renewal and cancellation terms; neither EULA has them.
+**Done: 1.12 legal text**, deployed with 1.6: Breakroom `5e20ce0` and Android `3516bce`, effective November 20, 2026. The user approved the draft without reading it and will review it later. iPhone still needs to match. Not covered (separate decision): subscription renewal and cancellation terms; neither EULA has them.
 
-**Deploy check (2026-11-20):** the 1.6 changes don't affect Prosaurus. Every backend change is behind `req.site === 'greywire'` (or the socket's site check), and every web change is behind `isGreywire`. On Prosaurus `canUseServices()` and the layout condition work out the same as before. **Order matters:** apply migration 097 to production `breakroom` *before* the new backend starts, or Greywire requests will fail on the missing `greywire_joined_at` column (Prosaurus would still work). Deploying `main` also ships anything else on `main` that isn't deployed yet.
-
-**Waiting on:** the deploy (migration 097, then backend, then frontend).
-
-** Phase 2 on Android: 2.1 navigation shell, then 2.2 Sessions.
+**Next:** Phase 2 on Android: 2.1 navigation shell, then 2.2 Sessions.
 
 **Known test environment problems (fix before testing Sessions):** `/api/sessions` returns 500 in the test backend, on Prosaurus too: `breakroom_test` lacks migration 096 (`sessions.duration_ms`), and the test image lacks the `@tus/server` package.
 
-**Waiting for iPhone (on the Mac):** 0.1, 1.1, 1.3 and 1.4 are done on Android, not yet on iPhone.
+**Waiting for iPhone (on the Mac):** 0.1, 1.1, 1.3, 1.4 and the 1.12 legal text are done on Android, not yet on iPhone.
 
 **Test environment state:**
-- `breakroom_test`: migration 097 applied. `testuser` holds test pedal `00000000000000A1` (member); `testadmin` is now a Greywire user (non-member); test account `gwtest073722` exists. `npx ts-node database/setup.ts` in BreakTest resets everything (it syncs the schema from production, so 097 would be lost until production has it).
+- `breakroom_test`: migration 097 applied. `testuser` holds test pedal `00000000000000A1` (member); `testadmin` is now a Greywire user (non-member); test account `gwtest073722` exists. `npx ts-node database/setup.ts` in BreakTest resets everything (it syncs the schema from production, which now has 097).
 - To test again: start Docker Desktop, then from `../Breakroom` load `.env.test` and run `docker compose -f docker-compose.test.yml up -d --build backend-test`; start the `Pixel_9_API_35` emulator.
 
 **Working style agreed:** small commits, one change each; push after each finished step update this file as steps finish.
@@ -74,13 +70,13 @@ The backend serves both sites and works out the site from the `X-Site` header (n
 | 1.3 Forgot password (`/api/auth/forgot-password`; the reset link opens the website) | done | done | done | todo |
 | 1.4 Claim a pedal: serial entry (`POST /api/greywire/claim`, 10 failed/hour limit) | done | done | done | todo |
 | 1.5 Claim a pedal: QR scan | ? | n/a | todo | todo |
-| 1.6 Open Greywire to non-members: remove members-only gating (`greywireAccess.js`, web `requiresMember`) | wip (committed, not deployed) | wip (committed, not deployed) | n/a | n/a |
+| 1.6 Open Greywire to non-members: remove members-only gating (`greywireAccess.js`, web `requiresMember`) | done | done | n/a | n/a |
 | 1.7 Guest accounts (`isGuest`, can never be members) | done | ? | todo | todo |
 | 1.8 One subscription for both sites (Prosaurus and Greywire Studio) | done | ? | n/a | n/a |
 | 1.9 Free-tier limits on Greywire: members unlimited, others like Prosaurus (sessions 3+3, bands 1) | done | ? | n/a | n/a |
 | 1.10 Paywall: handle 402 `requiresSubscription`, show plan status (`/api/billing/plan`) | done | ? | todo | todo |
 | 1.11 In-app purchase (Google Play Billing / StoreKit) and backend verification for the Greywire app IDs | todo | n/a | todo | todo |
-| 1.12 EULA / Privacy Policy: no longer members-only; add the subscription terms | n/a | done (not deployed) | done | todo |
+| 1.12 EULA / Privacy Policy: no longer members-only; add the subscription terms | n/a | done | done | todo |
 
 Notes:
 - **1.6**: until this is done on the backend, a non-member using the app gets 403 `GREYWIRE_MEMBERSHIP_REQUIRED` on everything outside `/api/auth`, `/api/greywire` and `/api/eula`.
