@@ -36,7 +36,7 @@ Migration 097 is applied to production `breakroom` (1 existing account was recor
 
 **Known test environment problems (fix before testing Sessions):** `/api/sessions` returns 500 in the test backend, on Prosaurus too: `breakroom_test` lacks migration 096 (`sessions.duration_ms`), and the test image lacks the `@tus/server` package.
 
-**Waiting for iPhone (on the Mac):** 0.1, 1.1, 1.3, 1.4, the 1.12 legal text and 2.1 (same five tabs) are done on Android, not yet on iPhone.
+**iPhone caught up (2026-11-21, GreywireiPhone `575fc88`):** 1.1, 1.3, 1.4 and 2.1 (same five tabs). Still to check on iPhone: 0.1 (`X-Site`) and the 1.12 legal text.
 
 **Test environment state:**
 - `breakroom_test`: migration 097 applied. `testuser` holds test pedal `00000000000000A1` (member); `testadmin` is now a Greywire user (non-member); test account `gwtest073722` exists. `npx ts-node database/setup.ts` in BreakTest resets everything (it syncs the schema from production, which now has 097).
@@ -67,10 +67,10 @@ The backend serves both sites and works out the site from the `X-Site` header (n
 
 | Step | Backend | Web | Android | iPhone |
 |------|---------|-----|---------|--------|
-| 1.1 Sign up (client-side password hashing, like Prosaurus) | done | done | done | todo |
+| 1.1 Sign up (client-side password hashing, like Prosaurus) | done | done | done | done |
 | 1.2 Email verification: the email's link opens the website (no deep links for now) | done | done | n/a | n/a |
-| 1.3 Forgot password (`/api/auth/forgot-password`; the reset link opens the website) | done | done | done | todo |
-| 1.4 Claim a pedal: serial entry (`POST /api/greywire/claim`, 10 failed/hour limit) | done | done | done | todo |
+| 1.3 Forgot password (`/api/auth/forgot-password`; the reset link opens the website) | done | done | done | done |
+| 1.4 Claim a pedal: serial entry (`POST /api/greywire/claim`, 10 failed/hour limit) | done | done | done | done |
 | 1.5 Claim a pedal: QR scan | ? | n/a | todo | todo |
 | 1.6 Open Greywire to non-members: remove members-only gating (`greywireAccess.js`, web `requiresMember`) | done | done | n/a | n/a |
 | 1.7 Guest accounts (`isGuest`, can never be members) | done | ? | todo | todo |
@@ -93,7 +93,7 @@ Web routes: `/chat`, `/sessions`, `/friends`, `/user/:handle`, `/profile`. The P
 
 | Step | Backend | Web | Android | iPhone |
 |------|---------|-----|---------|--------|
-| 2.1 App navigation shell (somewhere to put the features below) | n/a | n/a | done | todo |
+| 2.1 App navigation shell (somewhere to put the features below) | n/a | n/a | done | done |
 | 2.2 Sessions: list, play/stream, upload, delete | done | done | todo | todo |
 | 2.3 Sessions: record in-app | n/a | ? | todo | todo |
 | 2.4 Sessions: comments, ratings, instrument tags, share links | done | done | todo | todo |
@@ -151,6 +151,7 @@ Notes:
 
 Newest first. One line per finished step, with the commit.
 
+- 2026-11-21: 1.1, 1.3, 1.4 and 2.1 iPhone: sign up, forgot password, claim a pedal and the five tabs (GreywireiPhone `575fc88`).
 - 2026-11-20: 2.1 Android: navigation shell, five bottom tabs (`ca10737`, `097c109`). Tested on the emulator: tabs switch, Back from a tab goes Home, Claim is full screen without the bar, Sign out on Profile goes to Login.
 - 2026-11-20: 1.6 and 1.12 deployed to production (Breakroom); 1.12 Android legal text `3516bce`.
 
