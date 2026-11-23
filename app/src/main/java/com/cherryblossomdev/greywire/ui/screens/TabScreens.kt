@@ -21,17 +21,8 @@ import com.cherryblossomdev.greywire.ui.components.GreywireTopBar
 import com.cherryblossomdev.greywire.ui.components.SectionHeading
 import com.cherryblossomdev.greywire.ui.theme.GreywireMuted
 
-// Placeholder tab screens for the navigation shell (roadmap step 2.1).
-// Each is replaced by the real feature: Sessions (2.2), Profile (2.9).
-// Friends is FriendsScreen.kt, Chat is ChatScreen.kt.
-
-@Composable
-fun SessionsTabScreen() = PlaceholderTab(
-    title = "Sessions",
-    heading = "Your recordings",
-    text = "Band practices and your own takes, ready to play back, rate and share.",
-    testTag = "sessions-screen"
-)
+// The Profile tab. The other tabs have their own files: SessionsScreen.kt,
+// ChatScreen.kt and FriendsScreen.kt.
 
 /** Profile, for now just who's signed in and Sign out. */
 @Composable
@@ -45,16 +36,6 @@ fun ProfileTabScreen(username: String?, onLogout: () -> Unit) {
         GreywireGhostButton(onClick = onLogout, modifier = Modifier.testTag("logout-button")) {
             Text("Sign out", style = MaterialTheme.typography.labelMedium)
         }
-    }
-}
-
-@Composable
-private fun PlaceholderTab(title: String, heading: String, text: String, testTag: String) {
-    TabColumn(title = title, testTag = testTag) {
-        Eyebrow("Coming soon")
-        SectionHeading(heading)
-        Spacer(Modifier.height(16.dp))
-        ComingSoonCard(text)
     }
 }
 

@@ -34,7 +34,7 @@ Migration 097 is applied to production `breakroom` (1 existing account was recor
 
 **Next:** 2.2 Sessions on Android (fills the Sessions tab, replacing the placeholder in `TabScreens.kt`). First fix the test environment (below): apply migration 096 to `breakroom_test` and rebuild the test image (`--build`) so it has `@tus/server`. (Asked the user on 2026-11-20; not answered yet.)
 
-**Known test environment problems (fix before testing Sessions):** `/api/sessions` returns 500 in the test backend, on Prosaurus too: `breakroom_test` lacks migration 096 (`sessions.duration_ms`), and the test image lacks the `@tus/server` package.
+**Known test environment problems (fix before testing Sessions; still open 2026-11-23?):** `/api/sessions` returns 500 in the test backend, on Prosaurus too: `breakroom_test` lacks migration 096 (`sessions.duration_ms`), and the test image lacks the `@tus/server` package.
 
 **iPhone caught up (2026-11-21, GreywireiPhone `575fc88`):** 1.1, 1.3, 1.4 and 2.1 (same five tabs). Still to check on iPhone: 0.1 (`X-Site`) and the 1.12 legal text.
 
@@ -96,9 +96,9 @@ Web routes: `/chat`, `/sessions`, `/friends`, `/user/:handle`, `/profile`. The P
 | Step | Backend | Web | Android | iPhone |
 |------|---------|-----|---------|--------|
 | 2.1 App navigation shell (somewhere to put the features below) | n/a | n/a | done | done |
-| 2.2 Sessions: list, play/stream, upload, delete | done | done | todo | todo |
+| 2.2 Sessions: list, play/stream, upload, delete | done | done | wip | wip |
 | 2.3 Sessions: record in-app | n/a | ? | todo | todo |
-| 2.4 Sessions: comments, ratings, instrument tags, share links | done | done | todo | todo |
+| 2.4 Sessions: comments, ratings, instrument tags, share links | done | done | wip | wip |
 | 2.5 Bands: create, invite (link and email), members, band sessions | done | done | todo | todo |
 | 2.6 Band setlists (`/bands/:id/setlists`) | done | ? | todo | todo |
 | 2.7 Chat: rooms and direct messages (Socket.IO) | done | done | wip | wip |
@@ -107,6 +107,7 @@ Web routes: `/chat`, `/sessions`, `/friends`, `/user/:handle`, `/profile`. The P
 | 2.10 Musician profile (bio, "musician only"; Greywire only) | done | done | todo | todo |
 
 Notes:
+- **2.2 / 2.4**: both apps list the user's sessions and their bandmates' (`/api/sessions`, `/api/sessions/band-members`), play them (`/stream` with the token) and rate them 1 to 10. Still to do: upload and delete (2.2), comments and share links (2.4). Upload is where the paywall (1.10) first matters: the free tier allows 3 + 3 sessions.
 - **2.7**: both apps list rooms and direct messages, open them, load earlier messages and send text. Still to do: live updates over Socket.IO (new messages only appear on reopening), images and videos (shown as a placeholder), starting a DM from Friends, and joining or creating rooms.
 - **2.7 iOS bugs (found while matching it on Android, 2026-11-23):** `GET /rooms/:id/messages` already returns oldest first, but `ChatRoomViewModel` reverses it, so messages show newest at the top and "Load earlier" uses the wrong `before`; `POST /rooms/:id/messages` answers `{ message: {...} }` but iOS decodes the message itself, so sending reports an error even though the message was saved; and `before` isn't URL-encoded. Android follows the backend.
 - **2.8**: both apps have the list and requests (accept, decline, cancel, remove). Still to do: search for people and send a request (`/api/friends/search`, `POST /api/friends/request/:id`; the API call is already in both apps).
@@ -158,6 +159,7 @@ Notes:
 
 Newest first. One line per finished step, with the commit.
 
+- 2026-11-23: 2.2 and 2.4 (list, play, rate) Android, matching GreywireiPhone `6c44986`.
 - 2026-11-23: 2.7 (rooms and DMs over REST) Android, matching GreywireiPhone `392e675`.
 - 2026-11-23: 2.8 (list and requests) Android, matching GreywireiPhone `d3c5e86`. iPhone did the same on 2026-11-22.
 - 2026-11-23: 1.5, 1.7 and 1.10 (screen only) Android, matching GreywireiPhone `29dd271`: QR scan on the claim screen, guest accounts, paywall.

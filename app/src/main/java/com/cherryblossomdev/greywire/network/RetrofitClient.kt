@@ -97,4 +97,21 @@ object RetrofitClient {
     val friendsApiService: FriendsApiService = retrofit.create(FriendsApiService::class.java)
 
     val chatApiService: ChatApiService = retrofit.create(ChatApiService::class.java)
+
+    val sessionsApiService: SessionsApiService = retrofit.create(SessionsApiService::class.java)
+
+    /**
+     * An HTTP client for streaming media (ExoPlayer), with the same headers as
+     * the API calls plus the user's [bearerToken]. The token goes in first so
+     * the cookie interceptor copies it into the jwtToken cookie too.
+     */
+    fun mediaHttpClient(bearerToken: String?): OkHttpClient = okHttpClient.newBuilder()
+        .apply {
+            if (bearerToken != null) {
+                interceptors().add(0, Interceptor { chain ->
+                    chain.proceed(chain.request().newBuilder().header("Authorization", bearerToken).build())
+                })
+            }
+        }
+        .build()
 }

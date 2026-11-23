@@ -28,7 +28,8 @@ import com.cherryblossomdev.greywire.ui.screens.ChatViewModel
 import com.cherryblossomdev.greywire.ui.screens.FriendsScreen
 import com.cherryblossomdev.greywire.ui.screens.FriendsViewModel
 import com.cherryblossomdev.greywire.ui.screens.ProfileTabScreen
-import com.cherryblossomdev.greywire.ui.screens.SessionsTabScreen
+import com.cherryblossomdev.greywire.ui.screens.SessionsScreen
+import com.cherryblossomdev.greywire.ui.screens.SessionsViewModel
 import com.cherryblossomdev.greywire.ui.screens.ClaimPedalScreen
 import com.cherryblossomdev.greywire.ui.screens.ClaimPedalViewModel
 import com.cherryblossomdev.greywire.ui.screens.EulaGateScreen
@@ -193,7 +194,10 @@ fun GreywireNavGraph(navController: NavHostController = rememberNavController())
                 )
             }
 
-            composable(Screen.Sessions.route) { SessionsTabScreen() }
+            composable(Screen.Sessions.route) {
+                val viewModel = remember { SessionsViewModel(deps.sessionsRepository) }
+                SessionsScreen(viewModel = viewModel, repository = deps.sessionsRepository, onSessionExpired = ::performLogout)
+            }
             composable(Screen.Chat.route) {
                 val viewModel = remember { ChatViewModel(deps.chatRepository) }
                 ChatScreen(viewModel = viewModel, repository = deps.chatRepository, onSessionExpired = ::performLogout)

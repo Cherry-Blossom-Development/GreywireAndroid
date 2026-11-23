@@ -109,6 +109,10 @@ dependencies {
     // Encrypted SharedPreferences for secure token storage
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
+    // Session playback: ExoPlayer, streaming through OkHttp to send the token (as ../Android does)
+    implementation("androidx.media3:media3-exoplayer:1.2.1")
+    implementation("androidx.media3:media3-datasource-okhttp:1.2.1")
+
     // QR scanning for pedal serials: Google's code scanner UI (Play services),
     // no camera permission needed in the app
     implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
