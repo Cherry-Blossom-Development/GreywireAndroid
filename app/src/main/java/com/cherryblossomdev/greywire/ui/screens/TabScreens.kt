@@ -23,7 +23,7 @@ import com.cherryblossomdev.greywire.ui.theme.GreywireMuted
 
 // Placeholder tab screens for the navigation shell (roadmap step 2.1).
 // Each is replaced by the real feature: Sessions (2.2), Chat (2.7),
-// Friends (2.8), Profile (2.9).
+// Profile (2.9). Friends is FriendsScreen.kt.
 
 @Composable
 fun SessionsTabScreen() = PlaceholderTab(
@@ -39,14 +39,6 @@ fun ChatTabScreen() = PlaceholderTab(
     heading = "Rooms and messages",
     text = "Talk with the Greywire community and message your bandmates.",
     testTag = "chat-screen"
-)
-
-@Composable
-fun FriendsTabScreen() = PlaceholderTab(
-    title = "Friends",
-    heading = "Your people",
-    text = "Find other Greywire musicians, send requests and see who's around.",
-    testTag = "friends-screen"
 )
 
 /** Profile, for now just who's signed in and Sign out. */

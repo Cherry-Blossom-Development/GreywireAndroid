@@ -93,4 +93,6 @@ object RetrofitClient {
     val greywireApiService: GreywireApiService = retrofit.create(GreywireApiService::class.java)
 
     val billingApiService: BillingApiService = retrofit.create(BillingApiService::class.java)
+
+    val friendsApiService: FriendsApiService = retrofit.create(FriendsApiService::class.java)
 }

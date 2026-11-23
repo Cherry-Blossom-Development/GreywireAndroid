@@ -83,6 +83,7 @@ The backend serves both sites and works out the site from the `X-Site` header (n
 Notes:
 - **1.5**: the QR code holds the serial as plain text; nothing is needed on the backend. Android uses Google's code scanner (Play services), iOS AVFoundation.
 - **1.10**: the paywall screen is built in both apps, but nothing opens it yet: none of the features the apps have so far can hit a free-tier limit (uploads and bands can). Wire it up with those features (2.2 upload, 2.5 bands).
+- **2.8**: both apps have the list and requests (accept, decline, cancel, remove). Still to do: search for people and send a request (`/api/friends/search`, `POST /api/friends/request/:id`; the API call is already in both apps).
 - **1.6**: until this is done on the backend, a non-member using the app gets 403 `GREYWIRE_MEMBERSHIP_REQUIRED` on everything outside `/api/auth`, `/api/greywire` and `/api/eula`.
 - **1.9**: already in place: `checkFreeTierLimit` (`utilities/sessionRecords.js`) and the band limit in `routes/bands.js` let members past the limit on the Greywire site, and everyone else needs `isSubscribed`.
 - **1.11**: `/api/subscriptions/google/verify` checks purchases against one package name (`GOOGLE_PLAY_PACKAGE_NAME`, Prosaurus's). The Greywire app (`com.cherryblossomdev.greywire`) needs its own; Apple verification likewise needs the Greywire bundle ID.
@@ -102,7 +103,7 @@ Web routes: `/chat`, `/sessions`, `/friends`, `/user/:handle`, `/profile`. The P
 | 2.5 Bands: create, invite (link and email), members, band sessions | done | done | todo | todo |
 | 2.6 Band setlists (`/bands/:id/setlists`) | done | ? | todo | todo |
 | 2.7 Chat: rooms and direct messages (Socket.IO) | done | done | todo | todo |
-| 2.8 Friends: list, requests, search (members only) | done | done | todo | todo |
+| 2.8 Friends: list, requests, search (members only) | done | done | wip | wip |
 | 2.9 Profile: own profile, settings, other members' profiles | done | done | todo | todo |
 | 2.10 Musician profile (bio, "musician only"; Greywire only) | done | done | todo | todo |
 
@@ -153,6 +154,7 @@ Notes:
 
 Newest first. One line per finished step, with the commit.
 
+- 2026-11-23: 2.8 (list and requests) Android, matching GreywireiPhone `d3c5e86`. iPhone did the same on 2026-11-22.
 - 2026-11-23: 1.5, 1.7 and 1.10 (screen only) Android, matching GreywireiPhone `29dd271`: QR scan on the claim screen, guest accounts, paywall.
 - 2026-11-21: 1.1, 1.3, 1.4 and 2.1 iPhone: sign up, forgot password, claim a pedal and the five tabs (GreywireiPhone `575fc88`).
 - 2026-11-20: 2.1 Android: navigation shell, five bottom tabs (`ca10737`, `097c109`). Tested on the emulator: tabs switch, Back from a tab goes Home, Claim is full screen without the bar, Sign out on Profile goes to Login.
