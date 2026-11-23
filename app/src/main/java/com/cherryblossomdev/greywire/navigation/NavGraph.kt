@@ -12,7 +12,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import android.net.Uri
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -37,6 +40,8 @@ import com.cherryblossomdev.greywire.ui.screens.LegalScreen
 import com.cherryblossomdev.greywire.ui.screens.LegalViewModel
 import com.cherryblossomdev.greywire.ui.screens.LoginScreen
 import com.cherryblossomdev.greywire.ui.screens.LoginViewModel
+import com.cherryblossomdev.greywire.ui.screens.PaywallScreen
+import com.cherryblossomdev.greywire.ui.screens.PaywallViewModel
 import com.cherryblossomdev.greywire.ui.screens.PrivacyPolicyScreen
 import com.cherryblossomdev.greywire.ui.screens.SignupScreen
 import com.cherryblossomdev.greywire.ui.screens.SignupViewModel
@@ -57,6 +62,10 @@ sealed class Screen(val route: String) {
     object Legal : Screen("legal")
     object Eula : Screen("eula")
     object PrivacyPolicy : Screen("privacy-policy")
+    // Shown on a 402 (free-tier limit reached); the backend's message is the argument
+    object Paywall : Screen("paywall?message={message}") {
+        fun route(message: String) = "paywall?message=${Uri.encode(message)}"
+    }
 }
 
 @Composable
@@ -81,6 +90,14 @@ fun GreywireNavGraph(navController: NavHostController = rememberNavController())
         currentUserId.intValue = 0
         scope.launch { deps.authRepository.logout() }
         goToLogin()
+    }
+
+    // For a result with requiresSubscription (a 402): explain the limit and the plan.
+    // Nothing returns 402 yet in the features the app has (the limits are on
+    // uploads and bands), matching iOS, where the paywall is also not yet triggered.
+    @Suppress("unused")
+    fun showPaywall(message: String) {
+        navController.navigate(Screen.Paywall.route(message))
     }
 
     // Switching tabs keeps one copy of each tab, remembers its state, and
@@ -185,7 +202,7 @@ fun GreywireNavGraph(navController: NavHostController = rememberNavController())
             }
 
             composable(Screen.ClaimPedal.route) {
-                val viewModel = remember { ClaimPedalViewModel(deps.greywireRepository) }
+                val viewModel = remember { ClaimPedalViewModel(deps.greywireRepository, deps.authRepository) }
                 ClaimPedalScreen(
                     viewModel = viewModel,
                     onBack = { navController.popBackStack() },
@@ -210,6 +227,21 @@ fun GreywireNavGraph(navController: NavHostController = rememberNavController())
                 EulaScreen(
                     onBack = { navController.popBackStack() },
                     onOpenPrivacyPolicy = { navController.navigate(Screen.PrivacyPolicy.route) }
+                )
+            }
+
+            composable(
+                Screen.Paywall.route,
+                arguments = listOf(navArgument("message") {
+                    type = NavType.StringType
+                    defaultValue = "You've reached the free plan's limit."
+                })
+            ) { entry ->
+                val viewModel = remember { PaywallViewModel(deps.billingRepository) }
+                PaywallScreen(
+                    viewModel = viewModel,
+                    message = entry.arguments?.getString("message").orEmpty(),
+                    onDismiss = { navController.popBackStack() }
                 )
             }
 

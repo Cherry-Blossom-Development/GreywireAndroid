@@ -27,6 +27,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -39,6 +40,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cherryblossomdev.greywire.data.AuthRepository
 import com.cherryblossomdev.greywire.data.AuthResult
 import com.cherryblossomdev.greywire.data.GreywireRepository
 import com.cherryblossomdev.greywire.network.GreywirePedal
@@ -46,6 +48,7 @@ import com.cherryblossomdev.greywire.network.MembershipResponse
 import com.cherryblossomdev.greywire.ui.components.Eyebrow
 import com.cherryblossomdev.greywire.ui.components.GreywireButton
 import com.cherryblossomdev.greywire.ui.components.GreywireCard
+import com.cherryblossomdev.greywire.ui.components.GreywireGhostButton
 import com.cherryblossomdev.greywire.ui.components.GreywireTopBar
 import com.cherryblossomdev.greywire.ui.components.StatusPill
 import com.cherryblossomdev.greywire.ui.components.greywireTextFieldColors
@@ -53,12 +56,17 @@ import com.cherryblossomdev.greywire.ui.theme.GreywireMuted
 import com.cherryblossomdev.greywire.ui.theme.GreywireSignal
 import com.cherryblossomdev.greywire.ui.theme.GreywireText
 import com.cherryblossomdev.greywire.ui.theme.MonoSmallStyle
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 // Claim a pedal by its serial number (POST /api/greywire/claim), which makes
 // the user a Greywire member. The web version is Breakroom's GreywireClaimPage.vue.
+// The serial can also be read from the QR code on the pedal, using Google's
+// code scanner (Play services), which needs no camera permission in the app.
 
 data class ClaimPedalUiState(
     val serial: String = "",
@@ -69,11 +77,16 @@ data class ClaimPedalUiState(
     /** The pedal just claimed (or found to be already yours); shows the success view. */
     val claimed: GreywirePedal? = null,
     val alreadyYours: Boolean = false,
+    /** Guest accounts can never claim pedals (from /api/auth/me). */
+    val isGuest: Boolean = false,
+    /** The QR scanner couldn't start (e.g. Play services missing). */
+    val scanError: String? = null,
     val sessionExpired: Boolean = false
 )
 
 class ClaimPedalViewModel(
-    private val greywireRepository: GreywireRepository
+    private val greywireRepository: GreywireRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ClaimPedalUiState())
@@ -81,6 +94,13 @@ class ClaimPedalViewModel(
 
     fun load() {
         viewModelScope.launch {
+            when (val me = authRepository.getMe()) {
+                is AuthResult.Success -> _uiState.value = _uiState.value.copy(isGuest = me.data.isGuest)
+                is AuthResult.Error -> if (me.unauthorized) {
+                    _uiState.value = _uiState.value.copy(sessionExpired = true)
+                    return@launch
+                }
+            }
             when (val result = greywireRepository.getMembership()) {
                 is AuthResult.Success -> _uiState.value = _uiState.value.copy(membership = result.data)
                 // Not fatal: the form works without the list of pedals already held
@@ -92,7 +112,17 @@ class ClaimPedalViewModel(
     }
 
     fun updateSerial(value: String) {
-        _uiState.value = _uiState.value.copy(serial = value, errorMessage = null)
+        _uiState.value = _uiState.value.copy(serial = value, errorMessage = null, scanError = null)
+    }
+
+    /** A QR code was read: fill in the serial and claim it straight away, as iOS does. */
+    fun onScanned(code: String) {
+        updateSerial(code.trim())
+        claim()
+    }
+
+    fun onScanFailed(message: String) {
+        _uiState.value = _uiState.value.copy(scanError = message)
     }
 
     fun claim() {
@@ -140,6 +170,17 @@ fun ClaimPedalScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val focusManager = LocalFocusManager.current
+    val context = LocalContext.current
+
+    fun startScan() {
+        focusManager.clearFocus()
+        val options = GmsBarcodeScannerOptions.Builder()
+            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+            .build()
+        GmsBarcodeScanning.getClient(context, options).startScan()
+            .addOnSuccessListener { barcode -> barcode.rawValue?.let(viewModel::onScanned) }
+            .addOnFailureListener { viewModel.onScanFailed("Couldn't start the scanner. Enter the serial number instead.") }
+    }
 
     LaunchedEffect(Unit) { viewModel.load() }
     LaunchedEffect(uiState.sessionExpired) {
@@ -159,7 +200,9 @@ fun ClaimPedalScreen(
         ) {
             Spacer(Modifier.height(32.dp))
             val claimed = uiState.claimed
-            if (claimed != null) {
+            if (uiState.isGuest) {
+                GuestBlockedView(onBack)
+            } else if (claimed != null) {
                 ClaimedView(claimed, uiState.alreadyYours, onDone)
             } else {
                 ClaimForm(
@@ -168,7 +211,8 @@ fun ClaimPedalScreen(
                     onClaim = {
                         focusManager.clearFocus()
                         viewModel.claim()
-                    }
+                    },
+                    onScanQr = ::startScan
                 )
             }
             Spacer(Modifier.height(24.dp))
@@ -180,7 +224,8 @@ fun ClaimPedalScreen(
 private fun ClaimForm(
     uiState: ClaimPedalUiState,
     onSerialChange: (String) -> Unit,
-    onClaim: () -> Unit
+    onClaim: () -> Unit,
+    onScanQr: () -> Unit
 ) {
     val isMember = uiState.membership?.member == true
     val heldPedals = uiState.membership?.pedals.orEmpty()
@@ -194,7 +239,7 @@ private fun ClaimForm(
     )
     Spacer(Modifier.height(12.dp))
     Text(
-        text = "Every Greywire pedal comes with a free membership, with no subscription, for as long as you own it. Enter the pedal's serial number to add it to your account.",
+        text = "Every Greywire pedal comes with a free membership, with no subscription, for as long as you own it. Enter the pedal's serial number or scan its QR code.",
         style = MaterialTheme.typography.bodyLarge,
         color = GreywireMuted
     )
@@ -264,12 +309,50 @@ private fun ClaimForm(
         }
     }
 
+    Spacer(Modifier.height(12.dp))
+    GreywireGhostButton(
+        onClick = onScanQr,
+        enabled = !uiState.isClaiming,
+        modifier = Modifier.fillMaxWidth().testTag("scan-qr-button")
+    ) {
+        Text("Scan QR code", style = MaterialTheme.typography.labelMedium)
+    }
+    uiState.scanError?.let { error ->
+        Spacer(Modifier.height(8.dp))
+        Text(error, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+    }
+
     Spacer(Modifier.height(24.dp))
     Text(
         text = "Bought a pedal second-hand and it's already claimed? Contact support and we'll move it to your account.",
         style = MaterialTheme.typography.bodySmall,
         color = GreywireMuted
     )
+}
+
+@Composable
+private fun GuestBlockedView(onBack: () -> Unit) {
+    Eyebrow("Guest account")
+    Text(
+        text = "Can't claim pedals",
+        style = MaterialTheme.typography.headlineMedium,
+        color = GreywireText,
+        modifier = Modifier.semantics { heading() }.testTag("claim-guest")
+    )
+    Spacer(Modifier.height(12.dp))
+    Text(GUEST_ACCOUNT_TEXT, style = MaterialTheme.typography.bodyLarge, color = GreywireMuted)
+    Spacer(Modifier.height(24.dp))
+    GreywireCard {
+        Text(
+            "To claim a pedal, sign out and create a new account with your email address. Your guest account data won't transfer.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = GreywireMuted
+        )
+    }
+    Spacer(Modifier.height(24.dp))
+    GreywireButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
+        Text("Go back")
+    }
 }
 
 @Composable

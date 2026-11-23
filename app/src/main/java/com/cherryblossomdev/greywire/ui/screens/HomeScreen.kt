@@ -60,6 +60,8 @@ data class HomeUiState(
     val membership: MembershipResponse? = null,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
+    /** Guest accounts can never be Greywire members (from /api/auth/me). */
+    val isGuest: Boolean = false,
     /** The saved token was rejected (expired or revoked): send the user to sign in. */
     val sessionExpired: Boolean = false
 )
@@ -81,14 +83,17 @@ class HomeViewModel(
                 _uiState.value = _uiState.value.copy(isLoading = false, sessionExpired = true)
                 return@launch
             }
-            val username = (me as? AuthResult.Success)?.data?.username ?: _uiState.value.username
+            val meData = (me as? AuthResult.Success)?.data
+            val username = meData?.username ?: _uiState.value.username
+            val isGuest = meData?.isGuest ?: _uiState.value.isGuest
 
             when (val result = greywireRepository.getMembership()) {
                 is AuthResult.Success -> _uiState.value = _uiState.value.copy(
-                    username = username, membership = result.data, isLoading = false
+                    username = username, isGuest = isGuest, membership = result.data, isLoading = false
                 )
                 is AuthResult.Error -> _uiState.value = _uiState.value.copy(
                     username = username,
+                    isGuest = isGuest,
                     isLoading = false,
                     sessionExpired = result.unauthorized,
                     errorMessage = result.message
@@ -201,6 +206,10 @@ fun HomeScreen(
     }
 }
 
+/** Shown to guest accounts on Home and on the claim screen. */
+internal const val GUEST_ACCOUNT_TEXT =
+    "Guest accounts can't claim pedals or become Greywire members. Create a full account to unlock all features."
+
 @Composable
 private fun SectionDivider() {
     HorizontalDivider(color = GreywireLine, thickness = 1.dp)
@@ -217,6 +226,16 @@ private fun MembershipCard(uiState: HomeUiState, onClaimPedal: () -> Unit) {
                     modifier = Modifier.size(24.dp).align(Alignment.CenterHorizontally),
                     color = GreywireCopper,
                     strokeWidth = 2.dp
+                )
+            }
+            uiState.isGuest -> {
+                // Guests can never be members, so there's nothing to claim
+                StatusPill("Guest account")
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    text = GUEST_ACCOUNT_TEXT,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = GreywireMuted
                 )
             }
             membership == null -> {

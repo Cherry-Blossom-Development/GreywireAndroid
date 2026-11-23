@@ -71,16 +71,18 @@ The backend serves both sites and works out the site from the `X-Site` header (n
 | 1.2 Email verification: the email's link opens the website (no deep links for now) | done | done | n/a | n/a |
 | 1.3 Forgot password (`/api/auth/forgot-password`; the reset link opens the website) | done | done | done | done |
 | 1.4 Claim a pedal: serial entry (`POST /api/greywire/claim`, 10 failed/hour limit) | done | done | done | done |
-| 1.5 Claim a pedal: QR scan | ? | n/a | todo | todo |
+| 1.5 Claim a pedal: QR scan | n/a | n/a | done | done |
 | 1.6 Open Greywire to non-members: remove members-only gating (`greywireAccess.js`, web `requiresMember`) | done | done | n/a | n/a |
-| 1.7 Guest accounts (`isGuest`, can never be members) | done | ? | todo | todo |
+| 1.7 Guest accounts (`isGuest`, can never be members) | done | ? | done | done |
 | 1.8 One subscription for both sites (Prosaurus and Greywire Studio) | done | ? | n/a | n/a |
 | 1.9 Free-tier limits on Greywire: members unlimited, others like Prosaurus (sessions 3+3, bands 1) | done | ? | n/a | n/a |
-| 1.10 Paywall: handle 402 `requiresSubscription`, show plan status (`/api/billing/plan`) | done | ? | todo | todo |
+| 1.10 Paywall: handle 402 `requiresSubscription`, show plan status (`/api/billing/plan`) | done | ? | wip | wip |
 | 1.11 In-app purchase (Google Play Billing / StoreKit) and backend verification for the Greywire app IDs | todo | n/a | todo | todo |
 | 1.12 EULA / Privacy Policy: no longer members-only; add the subscription terms | n/a | done | done | todo |
 
 Notes:
+- **1.5**: the QR code holds the serial as plain text; nothing is needed on the backend. Android uses Google's code scanner (Play services), iOS AVFoundation.
+- **1.10**: the paywall screen is built in both apps, but nothing opens it yet: none of the features the apps have so far can hit a free-tier limit (uploads and bands can). Wire it up with those features (2.2 upload, 2.5 bands).
 - **1.6**: until this is done on the backend, a non-member using the app gets 403 `GREYWIRE_MEMBERSHIP_REQUIRED` on everything outside `/api/auth`, `/api/greywire` and `/api/eula`.
 - **1.9**: already in place: `checkFreeTierLimit` (`utilities/sessionRecords.js`) and the band limit in `routes/bands.js` let members past the limit on the Greywire site, and everyone else needs `isSubscribed`.
 - **1.11**: `/api/subscriptions/google/verify` checks purchases against one package name (`GOOGLE_PLAY_PACKAGE_NAME`, Prosaurus's). The Greywire app (`com.cherryblossomdev.greywire`) needs its own; Apple verification likewise needs the Greywire bundle ID.
@@ -151,6 +153,7 @@ Notes:
 
 Newest first. One line per finished step, with the commit.
 
+- 2026-11-23: 1.5, 1.7 and 1.10 (screen only) Android, matching GreywireiPhone `29dd271`: QR scan on the claim screen, guest accounts, paywall.
 - 2026-11-21: 1.1, 1.3, 1.4 and 2.1 iPhone: sign up, forgot password, claim a pedal and the five tabs (GreywireiPhone `575fc88`).
 - 2026-11-20: 2.1 Android: navigation shell, five bottom tabs (`ca10737`, `097c109`). Tested on the emulator: tabs switch, Back from a tab goes Home, Claim is full screen without the bar, Sign out on Profile goes to Login.
 - 2026-11-20: 1.6 and 1.12 deployed to production (Breakroom); 1.12 Android legal text `3516bce`.

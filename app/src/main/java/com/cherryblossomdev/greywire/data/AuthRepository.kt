@@ -15,7 +15,15 @@ import java.security.SecureRandom
 
 sealed class AuthResult<out T> {
     data class Success<T>(val data: T) : AuthResult<T>()
-    data class Error(val message: String, val unauthorized: Boolean = false) : AuthResult<Nothing>()
+    /**
+     * [unauthorized]: the token was rejected (401), so the user must sign in again.
+     * [requiresSubscription]: a free-tier limit was reached (402); show the paywall.
+     */
+    data class Error(
+        val message: String,
+        val unauthorized: Boolean = false,
+        val requiresSubscription: Boolean = false
+    ) : AuthResult<Nothing>()
 }
 
 // Same login mechanism as the Prosaurus app: POST /api/auth/login with the

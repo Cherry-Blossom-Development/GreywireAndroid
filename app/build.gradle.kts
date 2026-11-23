@@ -109,6 +109,10 @@ dependencies {
     // Encrypted SharedPreferences for secure token storage
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
+    // QR scanning for pedal serials: Google's code scanner UI (Play services),
+    // no camera permission needed in the app
+    implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 

@@ -15,6 +15,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Greywire"
         tools:targetApi="31">
+        <!-- Download the code scanner's module at install time rather than on first scan -->
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="barcode_ui" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

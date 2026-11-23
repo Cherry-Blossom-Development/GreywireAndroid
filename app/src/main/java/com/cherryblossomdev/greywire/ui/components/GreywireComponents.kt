@@ -11,11 +11,16 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -43,6 +48,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cherryblossomdev.greywire.R
@@ -131,6 +137,33 @@ fun GreywireTopBar(title: String, onBack: (() -> Unit)? = null) {
             )
         }
         HorizontalDivider(color = GreywireLine, thickness = 1.dp)
+    }
+}
+
+/**
+ * A full-screen sub-screen (no bottom bar): [GreywireTopBar] with a back arrow,
+ * then scrolling content centered and capped at [maxWidth] for tablets.
+ */
+@Composable
+fun GreywireSubScreen(
+    title: String,
+    onBack: () -> Unit,
+    testTag: String,
+    maxWidth: Dp = 520.dp,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(modifier = Modifier.fillMaxSize().systemBarsPadding().testTag(testTag)) {
+        GreywireTopBar(title = title, onBack = onBack)
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = maxWidth)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp),
+                content = content
+            )
+        }
     }
 }
 
