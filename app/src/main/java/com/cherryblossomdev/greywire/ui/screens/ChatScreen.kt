@@ -69,6 +69,7 @@ import com.cherryblossomdev.greywire.ui.components.InitialAvatar
 import com.cherryblossomdev.greywire.ui.components.LoadingFill
 import com.cherryblossomdev.greywire.ui.components.SectionOption
 import com.cherryblossomdev.greywire.ui.components.countLabel
+import com.cherryblossomdev.greywire.ui.components.readableWidth
 import com.cherryblossomdev.greywire.ui.components.formatTime
 import com.cherryblossomdev.greywire.ui.components.greywireTextFieldColors
 import com.cherryblossomdev.greywire.ui.theme.GreywireCopper
@@ -282,6 +283,7 @@ private fun ChatListScreen(uiState: ChatUiState, viewModel: ChatViewModel) {
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
+                    .readableWidth()
                     .padding(16.dp)
             ) {
                 uiState.errorMessage?.let { ErrorText(it, Modifier.testTag("chat-error")) }
@@ -386,7 +388,7 @@ private fun ChatRoomScreen(viewModel: ChatRoomViewModel, onBack: () -> Unit, onS
                     state = listState,
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize().readableWidth()
                 ) {
                     item(key = "earlier") {
                         if (uiState.hasMore) {

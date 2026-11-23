@@ -51,6 +51,7 @@ import com.cherryblossomdev.greywire.ui.components.LoadingFill
 import com.cherryblossomdev.greywire.ui.components.SectionOption
 import com.cherryblossomdev.greywire.ui.components.StatusPill
 import com.cherryblossomdev.greywire.ui.components.countLabel
+import com.cherryblossomdev.greywire.ui.components.readableWidth
 import com.cherryblossomdev.greywire.ui.theme.GreywireBg
 import com.cherryblossomdev.greywire.ui.theme.GreywireCopper
 import com.cherryblossomdev.greywire.ui.theme.GreywireMuted
@@ -188,6 +189,7 @@ fun FriendsScreen(viewModel: FriendsViewModel, onSessionExpired: () -> Unit) {
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
+                        .readableWidth()
                         .padding(horizontal = 16.dp, vertical = 16.dp)
                 ) {
                     uiState.errorMessage?.let { ErrorText(it, Modifier.testTag("friends-error")) }

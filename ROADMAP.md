@@ -132,7 +132,7 @@ Lyrics are shared between sites (decided 2026-11-17). Band pages hang off bands,
 | 4.1 My Pedals: claimed pedals with serial, model, claim date | ? | ? | todo | todo |
 | 4.2 Pedal transfer request (sold or gifted pedal; described in the EULA) | todo | todo | todo | todo |
 | 4.3 Pedal catalog from the backend (replaces hard-coded Home cards) | todo | todo | todo | todo |
-| 4.4 Pedal illustrations (port the website's SVGs) | n/a | n/a | todo | todo |
+| 4.4 Pedal illustrations (port the website's SVGs) | n/a | n/a | done | done |
 | 4.5 Pedal docs and support: manuals, power/wiring, warranty, contact | ? | ? | todo | todo |
 | 4.6 Switchyard: setlists and sounds stored on the pedal | todo | todo | todo | todo |
 
@@ -159,6 +159,7 @@ Notes:
 
 Newest first. One line per finished step, with the commit.
 
+- 2026-11-23: 4.4 Android: pedal illustrations on Home's cards, and the 632dp tablet width cap on the tabs, matching GreywireiPhone `1de7915`.
 - 2026-11-23: 2.2 and 2.4 (list, play, rate) Android, matching GreywireiPhone `6c44986`.
 - 2026-11-23: 2.7 (rooms and DMs over REST) Android, matching GreywireiPhone `392e675`.
 - 2026-11-23: 2.8 (list and requests) Android, matching GreywireiPhone `d3c5e86`. iPhone did the same on 2026-11-22.

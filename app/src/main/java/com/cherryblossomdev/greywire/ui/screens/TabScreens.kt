@@ -19,6 +19,7 @@ import com.cherryblossomdev.greywire.ui.components.GreywireCard
 import com.cherryblossomdev.greywire.ui.components.GreywireGhostButton
 import com.cherryblossomdev.greywire.ui.components.GreywireTopBar
 import com.cherryblossomdev.greywire.ui.components.SectionHeading
+import com.cherryblossomdev.greywire.ui.components.readableWidth
 import com.cherryblossomdev.greywire.ui.theme.GreywireMuted
 
 // The Profile tab. The other tabs have their own files: SessionsScreen.kt,
@@ -48,6 +49,7 @@ private fun TabColumn(title: String, testTag: String, content: @Composable () ->
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
+                .readableWidth()
                 .padding(horizontal = 16.dp, vertical = 24.dp)
         ) { content() }
     }

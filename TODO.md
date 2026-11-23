@@ -16,7 +16,6 @@ Loose ends to address later. **Features are planned in `ROADMAP.md`**, not here.
 
 - **Splash icon size.** On Android 12+ the splash icon nearly fills its circle. The adaptive foreground (`ic_launcher_foreground.xml`, scale 1.2) could be a bit smaller.
 - **Sign out button.** The outlined "ghost" button in the header has a faint fill; the website's ghost button is fully transparent. Check `GreywireGhostButton` colors.
-- **Tablet and landscape.** The login form caps its width at 420dp, but Home doesn't cap its width yet.
 
 ## Dev environment notes
 

@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
@@ -139,6 +140,19 @@ fun GreywireTopBar(title: String, onBack: (() -> Unit)? = null) {
         HorizontalDivider(color = GreywireLine, thickness = 1.dp)
     }
 }
+
+/** The widest the tabs' content gets (tablets, landscape), matching iOS's 632pt. */
+val TabContentMaxWidth = 632.dp
+
+/**
+ * Centers the content and caps its width at [maxWidth], so lines stay readable
+ * on tablets. Use it on the content inside a full-width scrolling container.
+ */
+fun Modifier.readableWidth(maxWidth: Dp = TabContentMaxWidth): Modifier = this
+    .fillMaxWidth()
+    .wrapContentWidth(Alignment.CenterHorizontally)
+    .widthIn(max = maxWidth)
+    .fillMaxWidth()
 
 /**
  * A full-screen sub-screen (no bottom bar): [GreywireTopBar] with a back arrow,

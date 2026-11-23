@@ -1,5 +1,7 @@
 package com.cherryblossomdev.greywire.ui.screens
 
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -29,11 +32,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cherryblossomdev.greywire.R
 import com.cherryblossomdev.greywire.data.AuthRepository
 import com.cherryblossomdev.greywire.data.AuthResult
 import com.cherryblossomdev.greywire.data.GreywireRepository
@@ -45,6 +50,7 @@ import com.cherryblossomdev.greywire.ui.components.GreywireGhostButton
 import com.cherryblossomdev.greywire.ui.components.GreywireHeader
 import com.cherryblossomdev.greywire.ui.components.SectionHeading
 import com.cherryblossomdev.greywire.ui.components.StatusPill
+import com.cherryblossomdev.greywire.ui.components.readableWidth
 import com.cherryblossomdev.greywire.ui.theme.GreywireCopper
 import com.cherryblossomdev.greywire.ui.theme.GreywireLine
 import com.cherryblossomdev.greywire.ui.theme.GreywireMuted
@@ -105,20 +111,29 @@ class HomeViewModel(
 
 // The pedals shown on the home screen, worded as on the website's home page.
 // Static for now; this should come from the backend once there's a pedal catalog.
-private data class PedalInfo(val name: String, val type: String, val blurb: String, val status: String)
+private data class PedalInfo(
+    val name: String,
+    val type: String,
+    val blurb: String,
+    val status: String,
+    /** The website's illustration (img/<name>.svg), rendered to a PNG since it uses text. */
+    @DrawableRes val image: Int
+)
 
 private val LineworkPedals = listOf(
     PedalInfo(
         name = "Flashover",
         type = "Analog distortion / overdrive",
         blurb = "A classic op-amp distortion with a tone control, soft or hard clipping, and knobs Switchyard can set for you.",
-        status = "Prototyping"
+        status = "Prototyping",
+        image = R.drawable.pedal_flashover
     ),
     PedalInfo(
         name = "Switchyard",
         type = "Control pedal",
         blurb = "Two footswitches, a song and part readout, and a direct connection to your phone. The brain of the board.",
-        status = "Design"
+        status = "Design",
+        image = R.drawable.pedal_switchyard
     )
 )
 
@@ -144,6 +159,7 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
+                .readableWidth()
                 .padding(horizontal = 16.dp)
         ) {
             // Hero (`.hero`)
@@ -292,13 +308,23 @@ private fun MembershipCard(uiState: HomeUiState, onClaimPedal: () -> Unit) {
 
 @Composable
 private fun PedalCard(pedal: PedalInfo) {
-    GreywireCard {
-        Text(pedal.name, style = MaterialTheme.typography.titleLarge, color = GreywireText)
-        Spacer(Modifier.height(2.dp))
-        Text(pedal.type, style = MonoSmallStyle, color = GreywireMuted)
-        Spacer(Modifier.height(10.dp))
-        Text(pedal.blurb, style = MaterialTheme.typography.bodyMedium, color = GreywireMuted)
-        Spacer(Modifier.height(14.dp))
-        StatusPill(pedal.status)
+    GreywireCard(modifier = Modifier.testTag("pedal-card-${pedal.name.lowercase()}")) {
+        Row(verticalAlignment = Alignment.Top) {
+            Image(
+                painter = painterResource(pedal.image),
+                contentDescription = "${pedal.name} pedal",
+                modifier = Modifier.size(width = 80.dp, height = 120.dp)
+            )
+            Spacer(Modifier.width(16.dp))
+            Column {
+                Text(pedal.name, style = MaterialTheme.typography.titleLarge, color = GreywireText)
+                Spacer(Modifier.height(2.dp))
+                Text(pedal.type, style = MonoSmallStyle, color = GreywireMuted)
+                Spacer(Modifier.height(10.dp))
+                Text(pedal.blurb, style = MaterialTheme.typography.bodyMedium, color = GreywireMuted)
+                Spacer(Modifier.height(14.dp))
+                StatusPill(pedal.status)
+            }
+        }
     }
 }
