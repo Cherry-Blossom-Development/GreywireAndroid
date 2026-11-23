@@ -35,6 +35,7 @@ import com.cherryblossomdev.greywire.ui.components.GreywireButton
 import com.cherryblossomdev.greywire.ui.components.GreywireCard
 import com.cherryblossomdev.greywire.ui.components.GreywireSubScreen
 import com.cherryblossomdev.greywire.ui.components.StatusPill
+import com.cherryblossomdev.greywire.ui.components.formatShortDate
 import com.cherryblossomdev.greywire.ui.theme.GreywireCopper
 import com.cherryblossomdev.greywire.ui.theme.GreywireMuted
 import com.cherryblossomdev.greywire.ui.theme.GreywireSignal
@@ -43,9 +44,6 @@ import com.cherryblossomdev.greywire.ui.theme.MonoSmallStyle
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Locale
-import java.util.TimeZone
 
 // Shown when the backend answers 402 (a free-tier limit was reached:
 // requiresSubscription). In-app purchase isn't built yet (roadmap 1.11), so
@@ -185,25 +183,3 @@ private fun BenefitRow(text: String) {
         Text(text, style = MaterialTheme.typography.bodyMedium, color = GreywireMuted)
     }
 }
-
-// Dates from the backend are ISO 8601 in UTC ("2026-11-21T22:59:23.000Z") or
-// plain dates ("2026-11-21"). SimpleDateFormat rather than java.time, which
-// needs API 26 (minSdk is 24).
-private val isoPatterns = listOf("yyyy-MM-dd'T'HH:mm:ss.SSSX", "yyyy-MM-dd'T'HH:mm:ssX", "yyyy-MM-dd")
-
-/** Parses a backend timestamp, or null if it isn't one. */
-internal fun parseBackendDate(value: String): java.util.Date? {
-    for (pattern in isoPatterns) {
-        try {
-            val format = SimpleDateFormat(pattern, Locale.US)
-            format.timeZone = TimeZone.getTimeZone("UTC")
-            format.isLenient = false
-            return format.parse(value) ?: continue
-        } catch (e: Exception) { /* try the next pattern */ }
-    }
-    return null
-}
-
-/** "Nov 21, 2026" from a backend timestamp; anything else is shown as given. */
-internal fun formatShortDate(value: String): String =
-    parseBackendDate(value)?.let { SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(it) } ?: value

@@ -23,7 +23,8 @@ import androidx.navigation.compose.rememberNavController
 import com.cherryblossomdev.greywire.AppContainer
 import com.cherryblossomdev.greywire.ui.components.GreywireBottomBar
 import com.cherryblossomdev.greywire.ui.components.GreywireTab
-import com.cherryblossomdev.greywire.ui.screens.ChatTabScreen
+import com.cherryblossomdev.greywire.ui.screens.ChatScreen
+import com.cherryblossomdev.greywire.ui.screens.ChatViewModel
 import com.cherryblossomdev.greywire.ui.screens.FriendsScreen
 import com.cherryblossomdev.greywire.ui.screens.FriendsViewModel
 import com.cherryblossomdev.greywire.ui.screens.ProfileTabScreen
@@ -193,7 +194,10 @@ fun GreywireNavGraph(navController: NavHostController = rememberNavController())
             }
 
             composable(Screen.Sessions.route) { SessionsTabScreen() }
-            composable(Screen.Chat.route) { ChatTabScreen() }
+            composable(Screen.Chat.route) {
+                val viewModel = remember { ChatViewModel(deps.chatRepository) }
+                ChatScreen(viewModel = viewModel, repository = deps.chatRepository, onSessionExpired = ::performLogout)
+            }
             composable(Screen.Friends.route) {
                 val viewModel = remember { FriendsViewModel(deps.friendsRepository) }
                 FriendsScreen(viewModel = viewModel, onSessionExpired = ::performLogout)

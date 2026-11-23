@@ -3,6 +3,7 @@ package com.cherryblossomdev.greywire
 import android.content.Context
 import com.cherryblossomdev.greywire.data.AuthRepository
 import com.cherryblossomdev.greywire.data.BillingRepository
+import com.cherryblossomdev.greywire.data.ChatRepository
 import com.cherryblossomdev.greywire.data.FriendsRepository
 import com.cherryblossomdev.greywire.data.GreywireRepository
 import com.cherryblossomdev.greywire.data.TokenManager
@@ -20,5 +21,6 @@ class AppContainer(context: Context) {
     val authRepository by lazy { AuthRepository(RetrofitClient.apiService, tokenManager) }
     val greywireRepository by lazy { GreywireRepository(RetrofitClient.greywireApiService, tokenManager) }
     val billingRepository by lazy { BillingRepository(RetrofitClient.billingApiService, tokenManager) }
+    val chatRepository by lazy { ChatRepository(RetrofitClient.chatApiService, tokenManager) }
     val friendsRepository by lazy { FriendsRepository(RetrofitClient.friendsApiService, tokenManager) }
 }
