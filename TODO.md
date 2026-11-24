@@ -17,6 +17,10 @@ Loose ends to address later. **Features are planned in `ROADMAP.md`**, not here.
 - **Splash icon size.** On Android 12+ the splash icon nearly fills its circle. The adaptive foreground (`ic_launcher_foreground.xml`, scale 1.2) could be a bit smaller.
 - **Sign out button.** The outlined "ghost" button in the header has a faint fill; the website's ghost button is fully transparent. Check `GreywireGhostButton` colors.
 
+## Testing
+
+- **Dialog test tags aren't visible to Appium.** `testTagsAsResourceId` is set only on the activity's root (`MainActivity`), and dialogs (`ConfirmDialog`, the date picker) are separate windows, so `confirm-button` (Friends, Sessions' delete) and `date-confirm-button` don't show up as resource-ids. Found 2026-11-24 while testing delete; tapping by text works. Fix: set `testTagsAsResourceId = true` in the dialogs' content too.
+
 ## Dev environment notes
 
 - The `Pixel_7_API_34` emulator is nearly full (about 240 MB free) and refuses installs. Use `Pixel_9_API_35`, or free space or wipe data on the Pixel 7.

@@ -15,34 +15,24 @@ Small loose ends (polish, dev notes) stay in `TODO.md`. Update this file as each
 
 **Status key:** `done` · `wip` · `todo` · `n/a` (nothing needed in that project) · `?` (not yet checked)
 
-## Where we left off (updated 2026-11-20, end of day)
+## Where we left off (updated 2026-11-24)
 
-**Done on Android:** 0.1 `X-Site: greywire`, 1.1 Sign up, 1.3 Forgot password, 1.4 Claim a pedal. All pushed and tested on the emulator against the local test backend.
+**Done on Android since 2026-11-20:** 2.2 list, play, upload and delete; 2.4 ratings; 2.7 rooms and DMs over REST; 2.8 friends list and requests; 1.5 QR claim; 1.7 guests; 1.10 paywall (now shown when an upload hits the free-tier limit); 4.4 pedal illustrations; tablet width caps. See the Log.
 
-**Done: 1.6 Open Greywire to non-members (Breakroom)**, deployed to production 2026-11-20:
-- `d992f67` migration **097** (`users.greywire_joined_at`) and helpers `greywireUserSql` / `isGreywireUser` / `ensureGreywireUser` in `backend/utilities/greywire.js`
-- `59766bc` `greywireAccess.js` and the socket check let in any non-guest account and record it as a Greywire user (first time: joins the Greywire default rooms)
-- `bb99148` friends, search, profiles and band invites on Greywire show Greywire users (used Greywire, or a member)
-- `990ce05` web: route guard, layout and services block only guests; sign up goes to chat; band invites don't need a pedal; App.vue watches only the username (so claiming doesn't start services twice)
-- `df6d4dd` web wording: Greywire home, claim page, band invite, email-verified message, Claim link on Billing & Membership
+**Last finished: 2.2 upload and delete on Android** (2026-11-24). "Upload a recording" on My Sessions opens a form in the tab: pick an audio file (up to 100 MB, nginx's limit), name, Band practice or Solo take, band (if the user has any) or instrument, and recording date. It uses the single-request `POST /api/sessions` (the web's resumable tus upload isn't needed for mobile, as in the Prosaurus app). A 402 opens the paywall. Your own sessions have "Delete session" (after confirming). Tested on the emulator against the test backend, including the paywall (testadmin with 3 solo sessions).
 
-Migration 097 is applied to production `breakroom` (1 existing account was recorded as a Greywire user) and to `breakroom_test`. Before deploying, checked that none of it affects Prosaurus: every backend change is behind `req.site === 'greywire'` or the socket's site check, and every web change is behind `isGreywire`. community.greywirestudio.com serves the same build as prosaurus.com (`/var/www/prosaurus.com`), so one frontend upload covers both.
+**Next:** match 2.2 upload and delete on iPhone. Then, on Android, pick from: 2.9/2.10 Profile (the tab is still a stub), 2.5 Bands, 2.8 friend search, 2.7 live chat (Socket.IO), 2.4 comments and share links.
 
-**Done: 1.12 legal text**, deployed with 1.6: Breakroom `5e20ce0` and Android `3516bce`, effective November 20, 2026. The user approved the draft without reading it and will review it later. iPhone still needs to match. Not covered (separate decision): subscription renewal and cancellation terms; neither EULA has them.
+**For iPhone (check while matching 2.2):** the session's recording date (`recorded_at`) comes as UTC midnight (`2026-11-24T00:00:00.000Z`); shown in local time it's a day early west of UTC. Android now formats it in UTC (`formatCalendarDate` in `Dates.kt`). iPhone probably has the same bug.
 
-**Done: 2.1 navigation shell on Android** (2026-11-20): five bottom tabs, Home, Sessions, Chat, Friends, Profile (user's choice, matching the web menu). Sign out moved to Profile.
+**Test environment (fixed 2026-11-24):**
+- `breakroom_test` was missing migrations 049 (`sessions.duration_ms`) and 096 (`master_s3_key`, `master_file_size`); both are applied now, so `/api/sessions` works.
+- The test backend lacked `@tus/server` because the `breakroom_backend_test_node_modules` volume kept old packages even after `--build`. Removing the volume and rebuilding fixed it. If a new backend package is missing again: `docker volume rm breakroom_backend_test_node_modules`, then rebuild.
+- To start it: start Docker Desktop, then from `../Breakroom` run `docker compose --env-file .env.test -f docker-compose.test.yml up -d --build backend-test`; start the `Pixel_9_API_35` emulator.
+- The test backend stores uploads in the real S3 bucket (`prosaurus-breakroom-uploads`), so delete test sessions afterwards (deleting removes the S3 files).
+- Accounts: `testuser` holds test pedal `00000000000000A1` (member, no limits); `testadmin` is a Greywire user without a pedal (free tier: 3 band + 3 solo sessions), handy for testing the paywall. Test account `gwtest073722` exists. `npx ts-node database/setup.ts` in BreakTest resets everything.
 
-**Next:** 2.2 Sessions on Android (fills the Sessions tab, replacing the placeholder in `TabScreens.kt`). First fix the test environment (below): apply migration 096 to `breakroom_test` and rebuild the test image (`--build`) so it has `@tus/server`. (Asked the user on 2026-11-20; not answered yet.)
-
-**Known test environment problems (fix before testing Sessions; still open 2026-11-23?):** `/api/sessions` returns 500 in the test backend, on Prosaurus too: `breakroom_test` lacks migration 096 (`sessions.duration_ms`), and the test image lacks the `@tus/server` package.
-
-**iPhone caught up (2026-11-21, GreywireiPhone `575fc88`):** 1.1, 1.3, 1.4 and 2.1 (same five tabs). Still to check on iPhone: 0.1 (`X-Site`) and the 1.12 legal text.
-
-**Test environment state:**
-- `breakroom_test`: migration 097 applied. `testuser` holds test pedal `00000000000000A1` (member); `testadmin` is now a Greywire user (non-member); test account `gwtest073722` exists. `npx ts-node database/setup.ts` in BreakTest resets everything (it syncs the schema from production, which now has 097).
-- To test again: start Docker Desktop, then from `../Breakroom` load `.env.test` and run `docker compose -f docker-compose.test.yml up -d --build backend-test`; start the `Pixel_9_API_35` emulator.
-
-**Working style agreed:** small commits, one change each; push after each finished step update this file as steps finish.
+**Working style agreed:** small commits, one change each; push after each finished step; update this file as steps finish.
 
 ## Decisions
 
@@ -76,7 +66,7 @@ The backend serves both sites and works out the site from the `X-Site` header (n
 | 1.7 Guest accounts (`isGuest`, can never be members) | done | ? | done | done |
 | 1.8 One subscription for both sites (Prosaurus and Greywire Studio) | done | ? | n/a | n/a |
 | 1.9 Free-tier limits on Greywire: members unlimited, others like Prosaurus (sessions 3+3, bands 1) | done | ? | n/a | n/a |
-| 1.10 Paywall: handle 402 `requiresSubscription`, show plan status (`/api/billing/plan`) | done | ? | wip | wip |
+| 1.10 Paywall: handle 402 `requiresSubscription`, show plan status (`/api/billing/plan`) | done | ? | done | wip |
 | 1.11 In-app purchase (Google Play Billing / StoreKit) and backend verification for the Greywire app IDs | todo | n/a | todo | todo |
 | 1.12 EULA / Privacy Policy: no longer members-only; add the subscription terms | n/a | done | done | todo |
 
@@ -96,7 +86,7 @@ Web routes: `/chat`, `/sessions`, `/friends`, `/user/:handle`, `/profile`. The P
 | Step | Backend | Web | Android | iPhone |
 |------|---------|-----|---------|--------|
 | 2.1 App navigation shell (somewhere to put the features below) | n/a | n/a | done | done |
-| 2.2 Sessions: list, play/stream, upload, delete | done | done | wip | wip |
+| 2.2 Sessions: list, play/stream, upload, delete | done | done | done | wip |
 | 2.3 Sessions: record in-app | n/a | ? | todo | todo |
 | 2.4 Sessions: comments, ratings, instrument tags, share links | done | done | wip | wip |
 | 2.5 Bands: create, invite (link and email), members, band sessions | done | done | todo | todo |
@@ -107,7 +97,7 @@ Web routes: `/chat`, `/sessions`, `/friends`, `/user/:handle`, `/profile`. The P
 | 2.10 Musician profile (bio, "musician only"; Greywire only) | done | done | todo | todo |
 
 Notes:
-- **2.2 / 2.4**: both apps list the user's sessions and their bandmates' (`/api/sessions`, `/api/sessions/band-members`), play them (`/stream` with the token) and rate them 1 to 10. Still to do: upload and delete (2.2), comments and share links (2.4). Upload is where the paywall (1.10) first matters: the free tier allows 3 + 3 sessions.
+- **2.2 / 2.4**: both apps list the user's sessions and their bandmates' (`/api/sessions`, `/api/sessions/band-members`), play them (`/stream` with the token) and rate them 1 to 10. Android also uploads (`POST /api/sessions`, multipart: `audio`, `name`, `session_type`, `recorded_at`, `band_id`, `instrument_id`) and deletes your own sessions (`DELETE /api/sessions/:id`). Still to do: upload and delete on iPhone (2.2), comments and share links (2.4). Upload is where the paywall (1.10) first matters: the free tier allows 3 + 3 sessions, and Android shows the paywall on the 402.
 - **2.7**: both apps list rooms and direct messages, open them, load earlier messages and send text. Still to do: live updates over Socket.IO (new messages only appear on reopening), images and videos (shown as a placeholder), starting a DM from Friends, and joining or creating rooms.
 - **2.7 iOS bugs (found while matching it on Android, 2026-11-23):** `GET /rooms/:id/messages` already returns oldest first, but `ChatRoomViewModel` reverses it, so messages show newest at the top and "Load earlier" uses the wrong `before`; `POST /rooms/:id/messages` answers `{ message: {...} }` but iOS decodes the message itself, so sending reports an error even though the message was saved; and `before` isn't URL-encoded. Android follows the backend.
 - **2.8**: both apps have the list and requests (accept, decline, cancel, remove). Still to do: search for people and send a request (`/api/friends/search`, `POST /api/friends/request/:id`; the API call is already in both apps).
@@ -159,6 +149,7 @@ Notes:
 
 Newest first. One line per finished step, with the commit.
 
+- 2026-11-24: 2.2 Android: upload and delete, and the paywall on a 402 (1.10). Tested on the emulator: upload as a solo take with an instrument, playback of the upload, delete, and the paywall for testadmin's 4th solo session. Also fixed the recording date showing a day early. Test environment fixed (migrations 049 and 096 on `breakroom_test`, fresh `node_modules` volume).
 - 2026-11-23: 4.4 Android: pedal illustrations on Home's cards, and the 632dp tablet width cap on the tabs, matching GreywireiPhone `1de7915`.
 - 2026-11-23: 2.2 and 2.4 (list, play, rate) Android, matching GreywireiPhone `6c44986`.
 - 2026-11-23: 2.7 (rooms and DMs over REST) Android, matching GreywireiPhone `392e675`.
