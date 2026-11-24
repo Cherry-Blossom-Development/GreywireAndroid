@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -67,7 +68,9 @@ import com.cherryblossomdev.greywire.network.formatDuration
 import com.cherryblossomdev.greywire.ui.components.EmptyStateCard
 import com.cherryblossomdev.greywire.ui.components.ErrorText
 import com.cherryblossomdev.greywire.ui.components.Eyebrow
+import com.cherryblossomdev.greywire.ui.components.GreywireButton
 import com.cherryblossomdev.greywire.ui.components.GreywireCard
+import com.cherryblossomdev.greywire.ui.components.GreywireGhostButton
 import com.cherryblossomdev.greywire.ui.components.GreywireSectionPicker
 import com.cherryblossomdev.greywire.ui.components.GreywireTabFrame
 import com.cherryblossomdev.greywire.ui.components.GreywireTopBar
@@ -94,8 +97,9 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 
 // The Sessions tab (roadmap 2.2 and 2.4, in part): the user's recordings and
-// their bandmates', playback, and 1-10 ratings. A session opens inside the
-// tab, as on iOS. Uploading, recording, comments and sharing come later.
+// their bandmates', playback, 1-10 ratings, uploading (SessionUploadScreen)
+// and deleting your own. A session and the upload form open inside the tab,
+// as on iOS. Recording, comments and sharing come later.
 
 enum class SessionsSection { Mine, Band }
 
@@ -105,6 +109,10 @@ data class SessionsUiState(
     val section: SessionsSection = SessionsSection.Mine,
     /** The session being shown, if any. */
     val openSession: Session? = null,
+    /** Whether the user can delete [openSession] (it's one of theirs). */
+    val openSessionIsMine: Boolean = false,
+    /** The upload form is showing. */
+    val isUploadOpen: Boolean = false,
     val isLoading: Boolean = false,
     val hasLoaded: Boolean = false,
     val errorMessage: String? = null,
@@ -120,14 +128,27 @@ class SessionsViewModel(private val repository: SessionsRepository) : ViewModel(
         _uiState.value = _uiState.value.copy(section = section)
     }
 
-    fun open(session: Session) {
-        _uiState.value = _uiState.value.copy(openSession = session)
+    fun open(session: Session, isMine: Boolean) {
+        _uiState.value = _uiState.value.copy(openSession = session, openSessionIsMine = isMine)
     }
 
-    /** Back from a session: reload, so a new rating shows in the list. */
+    /** Back from a session: reload, so a new rating (or a deletion) shows in the list. */
     fun close() {
-        _uiState.value = _uiState.value.copy(openSession = null)
+        _uiState.value = _uiState.value.copy(openSession = null, openSessionIsMine = false)
         load()
+    }
+
+    fun openUpload() {
+        _uiState.value = _uiState.value.copy(isUploadOpen = true)
+    }
+
+    /** Back from the upload form. After an upload, show My Sessions with the new one. */
+    fun closeUpload(uploaded: Boolean) {
+        _uiState.value = _uiState.value.copy(
+            isUploadOpen = false,
+            section = if (uploaded) SessionsSection.Mine else _uiState.value.section
+        )
+        if (uploaded) load()
     }
 
     fun onSessionExpired() {
@@ -163,6 +184,9 @@ data class SessionDetailUiState(
     val ratingCount: Int = 0,
     val isRating: Boolean = false,
     val errorMessage: String? = null,
+    val isDeleting: Boolean = false,
+    val deleteError: String? = null,
+    val deleted: Boolean = false,
     val sessionExpired: Boolean = false
 )
 
@@ -179,6 +203,21 @@ class SessionDetailViewModel(
     val streamUrl: String get() = repository.streamUrl(session.id)
 
     fun mediaHttpClient() = repository.mediaHttpClient()
+
+    fun delete() {
+        if (_uiState.value.isDeleting) return
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isDeleting = true, deleteError = null)
+            _uiState.value = when (val result = repository.delete(session.id)) {
+                is AuthResult.Success -> _uiState.value.copy(isDeleting = false, deleted = true)
+                is AuthResult.Error -> _uiState.value.copy(
+                    isDeleting = false,
+                    sessionExpired = result.unauthorized,
+                    deleteError = result.message
+                )
+            }
+        }
+    }
 
     /** Tapping the current rating clears it, as on iOS and the web. */
     fun tapRating(rating: Int) {
@@ -205,8 +244,14 @@ class SessionDetailViewModel(
 }
 
 @Composable
-fun SessionsScreen(viewModel: SessionsViewModel, repository: SessionsRepository, onSessionExpired: () -> Unit) {
+fun SessionsScreen(
+    viewModel: SessionsViewModel,
+    repository: SessionsRepository,
+    onShowPaywall: (String) -> Unit,
+    onSessionExpired: () -> Unit
+) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) { viewModel.load() }
     LaunchedEffect(uiState.sessionExpired) {
@@ -214,10 +259,28 @@ fun SessionsScreen(viewModel: SessionsViewModel, repository: SessionsRepository,
     }
 
     val openSession = uiState.openSession
-    if (openSession != null) {
+    if (uiState.isUploadOpen) {
+        val uploadViewModel = remember { SessionUploadViewModel(repository, context.cacheDir) }
+        DisposableEffect(uploadViewModel) { onDispose { uploadViewModel.discard() } }
+        val isUploading = uploadViewModel.uiState.collectAsState().value.isUploading
+        // Leaving mid-upload would lose the result, so Back waits for it
+        BackHandler { if (!isUploading) viewModel.closeUpload(uploaded = false) }
+        SessionUploadScreen(
+            uploadViewModel,
+            onBack = { viewModel.closeUpload(uploaded = false) },
+            onUploaded = { viewModel.closeUpload(uploaded = true) },
+            onShowPaywall = onShowPaywall,
+            onSessionExpired = viewModel::onSessionExpired
+        )
+    } else if (openSession != null) {
         BackHandler(onBack = viewModel::close)
         val detailViewModel = remember(openSession.id) { SessionDetailViewModel(repository, openSession) }
-        SessionDetailScreen(detailViewModel, onBack = viewModel::close, onSessionExpired = viewModel::onSessionExpired)
+        SessionDetailScreen(
+            detailViewModel,
+            canDelete = uiState.openSessionIsMine,
+            onBack = viewModel::close,
+            onSessionExpired = viewModel::onSessionExpired
+        )
     } else {
         SessionsListScreen(uiState, viewModel)
     }
@@ -260,15 +323,19 @@ private fun SessionsListScreen(uiState: SessionsUiState, viewModel: SessionsView
                 uiState.errorMessage?.let { ErrorText(it, Modifier.testTag("sessions-error")) }
                 when (uiState.section) {
                     SessionsSection.Mine -> if (uiState.mySessions.isEmpty()) {
+                        UploadButton(viewModel::openUpload)
+                        Spacer(Modifier.height(16.dp))
                         EmptyStateCard(
                             "No recordings yet",
-                            "Your band practices and solo takes will appear here. Upload from the web to get started."
+                            "Your band practices and solo takes will appear here. Upload one to get started."
                         )
                     } else {
+                        UploadButton(viewModel::openUpload)
+                        Spacer(Modifier.height(16.dp))
                         Eyebrow(countLabel(uiState.mySessions.size, "recording"))
                         Spacer(Modifier.height(2.dp))
                         uiState.mySessions.forEach { session ->
-                            SessionRow(session, showUploader = false) { viewModel.open(session) }
+                            SessionRow(session, showUploader = false) { viewModel.open(session, isMine = true) }
                             Spacer(Modifier.height(8.dp))
                         }
                     }
@@ -278,13 +345,22 @@ private fun SessionsListScreen(uiState: SessionsUiState, viewModel: SessionsView
                         Eyebrow(countLabel(uiState.bandSessions.size, "recording") + " from bandmates")
                         Spacer(Modifier.height(2.dp))
                         uiState.bandSessions.forEach { session ->
-                            SessionRow(session, showUploader = true) { viewModel.open(session) }
+                            SessionRow(session, showUploader = true) { viewModel.open(session, isMine = false) }
                             Spacer(Modifier.height(8.dp))
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun UploadButton(onClick: () -> Unit) {
+    GreywireButton(onClick = onClick, modifier = Modifier.fillMaxWidth().testTag("upload-button")) {
+        Icon(Icons.Filled.Upload, contentDescription = null, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(8.dp))
+        Text("Upload a recording")
     }
 }
 
@@ -328,12 +404,34 @@ private fun SessionRow(session: Session, showUploader: Boolean, onClick: () -> U
 }
 
 @Composable
-private fun SessionDetailScreen(viewModel: SessionDetailViewModel, onBack: () -> Unit, onSessionExpired: () -> Unit) {
+private fun SessionDetailScreen(
+    viewModel: SessionDetailViewModel,
+    canDelete: Boolean,
+    onBack: () -> Unit,
+    onSessionExpired: () -> Unit
+) {
     val uiState by viewModel.uiState.collectAsState()
     val session = viewModel.session
+    var confirmDelete by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.sessionExpired) {
         if (uiState.sessionExpired) onSessionExpired()
+    }
+    LaunchedEffect(uiState.deleted) {
+        if (uiState.deleted) onBack()
+    }
+    if (confirmDelete) {
+        ConfirmDialog(
+            title = "Delete this session?",
+            text = "“${session.displayName}” and its ratings will be deleted for everyone. This can't be undone.",
+            confirmLabel = "Delete",
+            dismissLabel = "Cancel",
+            onConfirm = {
+                confirmDelete = false
+                viewModel.delete()
+            },
+            onDismiss = { confirmDelete = false }
+        )
     }
 
     Column(modifier = Modifier.fillMaxSize().statusBarsPadding().testTag("session-detail-screen")) {
@@ -381,6 +479,24 @@ private fun SessionDetailScreen(viewModel: SessionDetailViewModel, onBack: () ->
                     session.recordedAt?.let { DetailRow("Recorded", formatCalendarDate(it)) }
                     session.uploadedAt?.let { DetailRow("Uploaded", formatShortDate(it)) }
                     session.uploaderHandle?.let { DetailRow("By", "@$it") }
+                }
+            }
+            if (canDelete) {
+                Spacer(Modifier.height(24.dp))
+                GreywireGhostButton(
+                    onClick = { confirmDelete = true },
+                    enabled = !uiState.isDeleting,
+                    modifier = Modifier.fillMaxWidth().testTag("delete-session-button")
+                ) {
+                    if (uiState.isDeleting) {
+                        CircularProgressIndicator(Modifier.size(16.dp), color = GreywireMuted, strokeWidth = 2.dp)
+                    } else {
+                        Text("Delete session", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.error)
+                    }
+                }
+                uiState.deleteError?.let {
+                    Spacer(Modifier.height(12.dp))
+                    ErrorText(it, Modifier.testTag("delete-error"))
                 }
             }
             Spacer(Modifier.height(40.dp))

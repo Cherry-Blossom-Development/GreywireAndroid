@@ -1,11 +1,16 @@
 package com.cherryblossomdev.greywire.network
 
 import com.google.gson.annotations.SerializedName
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.Part
 import retrofit2.http.Path
 
 // Sessions endpoints (Breakroom/backend/routes/sessions.js). With X-Site:
@@ -65,7 +70,55 @@ data class SessionRatingResponse(
     @SerializedName("my_rating") val myRating: Int? = null
 )
 
+data class SessionResponse(val session: Session? = null)
+
+/** A band the user is in (or invited to). Greywire's bands only, with X-Site: greywire. */
+data class Band(
+    val id: Int,
+    val name: String,
+    /** "active" or "invited". */
+    val status: String? = null
+)
+
+data class BandsResponse(val bands: List<Band> = emptyList())
+
+data class Instrument(val id: Int, val name: String)
+
+data class InstrumentsResponse(val instruments: List<Instrument> = emptyList())
+
 interface SessionsApiService {
+
+    /**
+     * Uploads a recording in one request (the backend transcodes it before
+     * answering, so call this on [RetrofitClient.sessionsUploadApiService],
+     * which waits longer). 402 when a free-tier limit is reached.
+     */
+    @Multipart
+    @POST("api/sessions")
+    suspend fun upload(
+        @Header("Authorization") token: String,
+        @Part audio: MultipartBody.Part,
+        @Part("name") name: RequestBody,
+        @Part("session_type") sessionType: RequestBody,
+        @Part("recorded_at") recordedAt: RequestBody?,
+        @Part("band_id") bandId: RequestBody?,
+        @Part("instrument_id") instrumentId: RequestBody?
+    ): Response<SessionResponse>
+
+    /** Deletes one of the user's own sessions. */
+    @DELETE("api/sessions/{id}")
+    suspend fun delete(
+        @Header("Authorization") token: String,
+        @Path("id") id: Int
+    ): Response<MessageResponse>
+
+    /** The user's bands, for the upload form. */
+    @GET("api/bands")
+    suspend fun getBands(@Header("Authorization") token: String): Response<BandsResponse>
+
+    /** The instrument list (public), for the upload form. */
+    @GET("api/instruments")
+    suspend fun getInstruments(@Header("Authorization") token: String): Response<InstrumentsResponse>
 
     /** The user's own sessions. */
     @GET("api/sessions")

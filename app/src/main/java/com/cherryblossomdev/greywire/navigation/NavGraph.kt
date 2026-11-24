@@ -96,9 +96,7 @@ fun GreywireNavGraph(navController: NavHostController = rememberNavController())
     }
 
     // For a result with requiresSubscription (a 402): explain the limit and the plan.
-    // Nothing returns 402 yet in the features the app has (the limits are on
-    // uploads and bands), matching iOS, where the paywall is also not yet triggered.
-    @Suppress("unused")
+    // Session uploads over the free-tier limit come here; band creation will too.
     fun showPaywall(message: String) {
         navController.navigate(Screen.Paywall.route(message))
     }
@@ -196,7 +194,12 @@ fun GreywireNavGraph(navController: NavHostController = rememberNavController())
 
             composable(Screen.Sessions.route) {
                 val viewModel = remember { SessionsViewModel(deps.sessionsRepository) }
-                SessionsScreen(viewModel = viewModel, repository = deps.sessionsRepository, onSessionExpired = ::performLogout)
+                SessionsScreen(
+                    viewModel = viewModel,
+                    repository = deps.sessionsRepository,
+                    onShowPaywall = ::showPaywall,
+                    onSessionExpired = ::performLogout
+                )
             }
             composable(Screen.Chat.route) {
                 val viewModel = remember { ChatViewModel(deps.chatRepository) }

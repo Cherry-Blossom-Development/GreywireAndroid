@@ -100,6 +100,22 @@ object RetrofitClient {
 
     val sessionsApiService: SessionsApiService = retrofit.create(SessionsApiService::class.java)
 
+    // Session uploads: sending up to 100 MB, then the backend transcodes the
+    // recording before it answers, which can take well over 30 seconds.
+    // No body logging: it would copy the whole recording into the log.
+    private val uploadRetrofit = retrofit.newBuilder()
+        .client(
+            okHttpClient.newBuilder()
+                .apply { interceptors().remove(loggingInterceptor) }
+                .readTimeout(5, TimeUnit.MINUTES)
+                .writeTimeout(5, TimeUnit.MINUTES)
+                .build()
+        )
+        .build()
+
+    /** [SessionsApiService] with long timeouts; use it for [SessionsApiService.upload]. */
+    val sessionsUploadApiService: SessionsApiService = uploadRetrofit.create(SessionsApiService::class.java)
+
     /**
      * An HTTP client for streaming media (ExoPlayer), with the same headers as
      * the API calls plus the user's [bearerToken]. The token goes in first so

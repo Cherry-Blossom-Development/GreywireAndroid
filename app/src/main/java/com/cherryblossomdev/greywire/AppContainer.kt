@@ -23,6 +23,6 @@ class AppContainer(context: Context) {
     val greywireRepository by lazy { GreywireRepository(RetrofitClient.greywireApiService, tokenManager) }
     val billingRepository by lazy { BillingRepository(RetrofitClient.billingApiService, tokenManager) }
     val chatRepository by lazy { ChatRepository(RetrofitClient.chatApiService, tokenManager) }
-    val sessionsRepository by lazy { SessionsRepository(RetrofitClient.sessionsApiService, tokenManager) }
+    val sessionsRepository by lazy { SessionsRepository(RetrofitClient.sessionsApiService, RetrofitClient.sessionsUploadApiService, tokenManager) }
     val friendsRepository by lazy { FriendsRepository(RetrofitClient.friendsApiService, tokenManager) }
 }
