@@ -106,6 +106,9 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
+    // Images (profile photos), same as the Prosaurus app
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
     // Encrypted SharedPreferences for secure token storage
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
 

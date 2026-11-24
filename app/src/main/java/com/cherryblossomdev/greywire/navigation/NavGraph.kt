@@ -27,7 +27,8 @@ import com.cherryblossomdev.greywire.ui.screens.ChatScreen
 import com.cherryblossomdev.greywire.ui.screens.ChatViewModel
 import com.cherryblossomdev.greywire.ui.screens.FriendsScreen
 import com.cherryblossomdev.greywire.ui.screens.FriendsViewModel
-import com.cherryblossomdev.greywire.ui.screens.ProfileTabScreen
+import com.cherryblossomdev.greywire.ui.screens.ProfileScreen
+import com.cherryblossomdev.greywire.ui.screens.ProfileViewModel
 import com.cherryblossomdev.greywire.ui.screens.SessionsScreen
 import com.cherryblossomdev.greywire.ui.screens.SessionsViewModel
 import com.cherryblossomdev.greywire.ui.screens.ClaimPedalScreen
@@ -210,10 +211,8 @@ fun GreywireNavGraph(navController: NavHostController = rememberNavController())
                 FriendsScreen(viewModel = viewModel, onSessionExpired = ::performLogout)
             }
             composable(Screen.Profile.route) {
-                ProfileTabScreen(
-                    username = remember { deps.authRepository.getStoredUsername() },
-                    onLogout = ::performLogout
-                )
+                val viewModel = remember { ProfileViewModel(deps.profileRepository) }
+                ProfileScreen(viewModel = viewModel, onLogout = ::performLogout, onSessionExpired = ::performLogout)
             }
 
             composable(Screen.ClaimPedal.route) {

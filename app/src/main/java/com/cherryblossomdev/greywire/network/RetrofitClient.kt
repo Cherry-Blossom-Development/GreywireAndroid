@@ -100,6 +100,8 @@ object RetrofitClient {
 
     val sessionsApiService: SessionsApiService = retrofit.create(SessionsApiService::class.java)
 
+    val profileApiService: ProfileApiService = retrofit.create(ProfileApiService::class.java)
+
     // Session uploads: sending up to 100 MB, then the backend transcodes the
     // recording before it answers, which can take well over 30 seconds.
     // No body logging: it would copy the whole recording into the log.
@@ -115,6 +117,9 @@ object RetrofitClient {
 
     /** [SessionsApiService] with long timeouts; use it for [SessionsApiService.upload]. */
     val sessionsUploadApiService: SessionsApiService = uploadRetrofit.create(SessionsApiService::class.java)
+
+    /** A file the backend serves from S3, such as a profile photo: `/api/uploads/<path>`. */
+    fun uploadUrl(path: String): String = "${BASE_URL}api/uploads/$path"
 
     /**
      * An HTTP client for streaming media (ExoPlayer), with the same headers as
