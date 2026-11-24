@@ -15,13 +15,15 @@ Small loose ends (polish, dev notes) stay in `TODO.md`. Update this file as each
 
 **Status key:** `done` · `wip` · `todo` · `n/a` (nothing needed in that project) · `?` (not yet checked)
 
-## Where we left off (updated 2026-11-24)
+## Where we left off (updated 2026-11-24, end of day)
 
-**Done on Android since 2026-11-20:** 2.2 list, play, upload and delete; 2.4 ratings; 2.7 rooms and DMs over REST; 2.8 friends list and requests; 1.5 QR claim; 1.7 guests; 1.10 paywall (now shown when an upload hits the free-tier limit); 4.4 pedal illustrations; tablet width caps. See the Log.
+**Done today on Android:** 2.2 upload and delete (with the paywall on a 402), the recording date fix, and the first step of the Profile tab (2.9/2.10): your own profile, read-only (`1894a10`). All pushed and tested on the emulator against the test backend.
 
-**Last finished: 2.2 upload and delete on Android** (2026-11-24). "Upload a recording" on My Sessions opens a form in the tab: pick an audio file (up to 100 MB, nginx's limit), name, Band practice or Solo take, band (if the user has any) or instrument, and recording date. It uses the single-request `POST /api/sessions` (the web's resumable tus upload isn't needed for mobile, as in the Prosaurus app). A 402 opens the paywall. Your own sessions have "Delete session" (after confirming). Tested on the emulator against the test backend, including the paywall (testadmin with 3 solo sessions).
+**Next: Profile editing (2.9/2.10 on Android).** The remaining Profile steps, in order: edit name and bio; edit the Musician Profile (music bio, "musician only", instruments, bands); profile photo; other people's profiles (from Friends); settings.
 
-**Next:** match 2.2 upload and delete on iPhone. Then, on Android, pick from: 2.9/2.10 Profile (the tab is still a stub), 2.5 Bands, 2.8 friend search, 2.7 live chat (Socket.IO), 2.4 comments and share links.
+**Open question for the user (asked 2026-11-24, not answered yet): how to edit bios in the app.** Bios are HTML from the web's rich-text editor. Options given: (1) plain text box, formatting from the web is lost when edited in the app; (2) plain text box, but bios with web formatting say "edit it on the website" and can't be edited in the app (recommended: quick, never loses anything); (3) a small formatting toolbar (bold, italics, lists), the most work, iOS must match. Until answered, the parts without bios can be built: names, "musician only", instruments, bands, photo.
+
+**iPhone still to match:** 2.2 upload and delete (and the paywall on a 402), and the Profile tab.
 
 **For iPhone (check while matching 2.2):** the session's recording date (`recorded_at`) comes as UTC midnight (`2026-11-24T00:00:00.000Z`); shown in local time it's a day early west of UTC. Android now formats it in UTC (`formatCalendarDate` in `Dates.kt`). iPhone probably has the same bug.
 
