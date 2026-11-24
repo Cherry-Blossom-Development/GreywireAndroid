@@ -93,13 +93,14 @@ Web routes: `/chat`, `/sessions`, `/friends`, `/user/:handle`, `/profile`. The P
 | 2.6 Band setlists (`/bands/:id/setlists`) | done | ? | todo | todo |
 | 2.7 Chat: rooms and direct messages (Socket.IO) | done | done | wip | wip |
 | 2.8 Friends: list, requests, search (members only) | done | done | wip | wip |
-| 2.9 Profile: own profile, settings, other members' profiles | done | done | todo | todo |
-| 2.10 Musician profile (bio, "musician only"; Greywire only) | done | done | todo | todo |
+| 2.9 Profile: own profile, settings, other members' profiles | done | done | wip | todo |
+| 2.10 Musician profile (bio, "musician only"; Greywire only) | done | done | wip | todo |
 
 Notes:
 - **2.2 / 2.4**: both apps list the user's sessions and their bandmates' (`/api/sessions`, `/api/sessions/band-members`), play them (`/stream` with the token) and rate them 1 to 10. Android also uploads (`POST /api/sessions`, multipart: `audio`, `name`, `session_type`, `recorded_at`, `band_id`, `instrument_id`) and deletes your own sessions (`DELETE /api/sessions/:id`). Still to do: upload and delete on iPhone (2.2), comments and share links (2.4). Upload is where the paywall (1.10) first matters: the free tier allows 3 + 3 sessions, and Android shows the paywall on the 402.
 - **2.7**: both apps list rooms and direct messages, open them, load earlier messages and send text. Still to do: live updates over Socket.IO (new messages only appear on reopening), images and videos (shown as a placeholder), starting a DM from Friends, and joining or creating rooms.
 - **2.7 iOS bugs (found while matching it on Android, 2026-11-23):** `GET /rooms/:id/messages` already returns oldest first, but `ChatRoomViewModel` reverses it, so messages show newest at the top and "Load earlier" uses the wrong `before`; `POST /rooms/:id/messages` answers `{ message: {...} }` but iOS decodes the message itself, so sending reports an error even though the message was saved; and `before` isn't URL-encoded. Android follows the backend.
+- **2.9 / 2.10** (Android, started 2026-11-24): the Profile tab shows your own profile, read-only: photo, name, About, the Musician Profile (music bio, musician-only, instruments, bands) and Details. Planned next, in order: edit name and bio; edit the Musician Profile (`PUT /api/profile/musician`, `/musician/instruments`, `/musician/bands`); profile photo (`POST`/`DELETE /api/profile/photo`); other people's profiles (`GET /api/profile/user/:handle`, from Friends); settings. Test data: testadmin has a music bio, two instruments and two bands in `breakroom_test`.
 - **2.8**: both apps have the list and requests (accept, decline, cancel, remove). Still to do: search for people and send a request (`/api/friends/search`, `POST /api/friends/request/:id`; the API call is already in both apps).
 
 ## Phase 3: Prosaurus music features brought into Greywire
