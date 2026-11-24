@@ -77,6 +77,7 @@ import com.cherryblossomdev.greywire.ui.components.SectionOption
 import com.cherryblossomdev.greywire.ui.components.StatusPill
 import com.cherryblossomdev.greywire.ui.components.countLabel
 import com.cherryblossomdev.greywire.ui.components.readableWidth
+import com.cherryblossomdev.greywire.ui.components.formatCalendarDate
 import com.cherryblossomdev.greywire.ui.components.formatShortDate
 import com.cherryblossomdev.greywire.ui.theme.GreywireBg
 import com.cherryblossomdev.greywire.ui.theme.GreywireCopper
@@ -377,7 +378,7 @@ private fun SessionDetailScreen(viewModel: SessionDetailViewModel, onBack: () ->
             Spacer(Modifier.height(2.dp))
             GreywireCard {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    session.recordedAt?.let { DetailRow("Recorded", formatShortDate(it)) }
+                    session.recordedAt?.let { DetailRow("Recorded", formatCalendarDate(it)) }
                     session.uploadedAt?.let { DetailRow("Uploaded", formatShortDate(it)) }
                     session.uploaderHandle?.let { DetailRow("By", "@$it") }
                 }

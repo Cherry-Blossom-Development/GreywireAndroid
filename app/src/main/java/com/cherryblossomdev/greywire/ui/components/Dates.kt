@@ -27,6 +27,16 @@ fun parseBackendDate(value: String): Date? {
 fun formatShortDate(value: String): String =
     parseBackendDate(value)?.let { SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(it) } ?: value
 
+/**
+ * "Nov 21, 2026" for a calendar date with no time of day, such as a session's
+ * recorded_at. The backend sends those as UTC midnight, so they're shown in
+ * UTC: in local time, anywhere west of UTC would show the day before.
+ */
+fun formatCalendarDate(value: String): String =
+    parseBackendDate(value)?.let {
+        SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).apply { timeZone = TimeZone.getTimeZone("UTC") }.format(it)
+    } ?: value
+
 /** "3:59 PM" (local time) from a backend timestamp, or "" if it isn't one. */
 fun formatTime(value: String): String =
     parseBackendDate(value)?.let { SimpleDateFormat("h:mm a", Locale.getDefault()).format(it) } ?: ""
