@@ -1,7 +1,9 @@
 package com.cherryblossomdev.greywire.data
 
 import okhttp3.MediaType.Companion.toMediaType
+import com.google.gson.GsonBuilder
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 
 import com.cherryblossomdev.greywire.network.BandUpdate
@@ -39,7 +41,14 @@ class ProfileRepository(
     }
 
     suspend fun updateProfile(update: ProfileUpdate): AuthResult<MessageOnlyResponse> =
-        authedCall(tokenManager, "Couldn't save your profile") { api.updateProfile(it, update) }
+        authedCall(tokenManager, "Couldn't save your profile") { api.updateProfile(it, update.toJsonBody()) }
+
+    // The backend binds all four fields straight into its UPDATE, and a field
+    // missing from the JSON is `undefined` there, which MariaDB rejects. Gson
+    // leaves nulls out by default, so write them as null explicitly (a user
+    // without a work bio is the usual case on Greywire).
+    private fun ProfileUpdate.toJsonBody(): RequestBody =
+        GsonBuilder().serializeNulls().create().toJson(this).toRequestBody("application/json; charset=utf-8".toMediaType())
 
     /** Uploads [jpeg] as the new profile photo. */
     suspend fun uploadPhoto(jpeg: ByteArray): AuthResult<PhotoResponse> {

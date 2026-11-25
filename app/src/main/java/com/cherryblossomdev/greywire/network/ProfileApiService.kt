@@ -1,6 +1,7 @@
 package com.cherryblossomdev.greywire.network
 
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -95,7 +96,7 @@ data class ProfileResponse(val user: Profile)
 
 /**
  * `PUT /api/profile` replaces all four fields, so send the bios as they are
- * when only the names change (null stays null).
+ * when only the names change (null stays null, and must be sent as null).
  */
 data class ProfileUpdate(
     val firstName: String,
@@ -147,9 +148,9 @@ interface ProfileApiService {
     @GET("api/profile")
     suspend fun getProfile(@Header("Authorization") token: String): Response<ProfileResponse>
 
-    /** Names and bios. */
+    /** Names and bios: a [ProfileUpdate] as JSON with its nulls written out (see ProfileRepository). */
     @PUT("api/profile")
-    suspend fun updateProfile(@Header("Authorization") token: String, @Body body: ProfileUpdate): Response<MessageOnlyResponse>
+    suspend fun updateProfile(@Header("Authorization") token: String, @Body body: RequestBody): Response<MessageOnlyResponse>
 
     /** Music bio and the musician-only setting (Greywire only). */
     @PUT("api/profile/musician")
