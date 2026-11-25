@@ -108,6 +108,7 @@ fun GreywireNavGraph(navController: NavHostController = rememberNavController())
 
     fun performLogout() {
         currentUserId.intValue = 0
+        deps.profileRepository.clearLastProfile()
         scope.launch { deps.authRepository.logout() }
         goToLogin()
     }

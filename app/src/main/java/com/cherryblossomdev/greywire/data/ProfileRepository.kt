@@ -6,6 +6,7 @@ import com.cherryblossomdev.greywire.network.InstrumentsResponse
 import com.cherryblossomdev.greywire.network.MessageOnlyResponse
 import com.cherryblossomdev.greywire.network.MusicianResponse
 import com.cherryblossomdev.greywire.network.MusicianUpdate
+import com.cherryblossomdev.greywire.network.Profile
 import com.cherryblossomdev.greywire.network.ProfileApiService
 import com.cherryblossomdev.greywire.network.ProfileResponse
 import com.cherryblossomdev.greywire.network.ProfileUpdate
@@ -14,8 +15,21 @@ class ProfileRepository(
     private val api: ProfileApiService,
     private val tokenManager: TokenManager
 ) {
+    /**
+     * The last profile loaded, so the Profile tab can show it straight away
+     * (and keep its scroll position) when it comes back from an edit screen.
+     */
+    var lastProfile: Profile? = null
+        private set
+
     suspend fun getProfile(): AuthResult<ProfileResponse> =
         authedCall(tokenManager, "Couldn't load your profile") { api.getProfile(it) }
+            .also { if (it is AuthResult.Success) lastProfile = it.data.user }
+
+    /** On sign out, so the next account doesn't briefly see this one's profile. */
+    fun clearLastProfile() {
+        lastProfile = null
+    }
 
     suspend fun updateProfile(update: ProfileUpdate): AuthResult<MessageOnlyResponse> =
         authedCall(tokenManager, "Couldn't save your profile") { api.updateProfile(it, update) }

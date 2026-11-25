@@ -73,6 +73,8 @@ import java.util.Locale
 data class ProfileUiState(
     val profile: Profile? = null,
     val isLoading: Boolean = false,
+    /** A pull to refresh (other reloads happen quietly behind the shown profile). */
+    val isRefreshing: Boolean = false,
     val errorMessage: String? = null,
     /** Saving the musician-only switch. */
     val isSavingMusician: Boolean = false,
@@ -82,16 +84,19 @@ data class ProfileUiState(
 
 class ProfileViewModel(private val repository: ProfileRepository) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(ProfileUiState())
+    // Starts from the last profile loaded, so coming back from an edit screen
+    // shows it at once (keeping the scroll position) while it reloads
+    private val _uiState = MutableStateFlow(ProfileUiState(profile = repository.lastProfile))
     val uiState: StateFlow<ProfileUiState> = _uiState
 
-    fun load() {
+    fun load(refreshing: Boolean = false) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+            _uiState.value = _uiState.value.copy(isLoading = true, isRefreshing = refreshing, errorMessage = null)
             _uiState.value = when (val result = repository.getProfile()) {
-                is AuthResult.Success -> _uiState.value.copy(profile = result.data.user, isLoading = false)
+                is AuthResult.Success -> _uiState.value.copy(profile = result.data.user, isLoading = false, isRefreshing = false)
                 is AuthResult.Error -> _uiState.value.copy(
                     isLoading = false,
+                    isRefreshing = false,
                     sessionExpired = result.unauthorized,
                     errorMessage = result.message
                 )
@@ -145,8 +150,8 @@ fun ProfileScreen(
             return@GreywireTabFrame
         }
         PullToRefreshBox(
-            isRefreshing = uiState.isLoading,
-            onRefresh = viewModel::load,
+            isRefreshing = uiState.isRefreshing,
+            onRefresh = { viewModel.load(refreshing = true) },
             modifier = Modifier.fillMaxSize()
         ) {
             Column(
