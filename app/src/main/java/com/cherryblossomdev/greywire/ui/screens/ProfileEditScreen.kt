@@ -40,7 +40,9 @@ import com.cherryblossomdev.greywire.data.AuthResult
 import com.cherryblossomdev.greywire.data.ProfileRepository
 import com.cherryblossomdev.greywire.network.Profile
 import com.cherryblossomdev.greywire.network.ProfileUpdate
+import com.cherryblossomdev.greywire.ui.components.BioDraft
 import com.cherryblossomdev.greywire.ui.components.ErrorText
+import com.cherryblossomdev.greywire.ui.components.RichBioEditor
 import com.cherryblossomdev.greywire.ui.components.Eyebrow
 import com.cherryblossomdev.greywire.ui.components.GreywireButton
 import com.cherryblossomdev.greywire.ui.components.GreywireTopBar
@@ -57,14 +59,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-// Edit profile (roadmap 2.9): first and last name, as the web's Profile page
-// edits them. `PUT /api/profile` saves the names and both bios together, so
-// the bios are sent back as loaded.
+// Edit profile (roadmap 2.9): first and last name and the About bio, as the
+// web's Profile page edits them. `PUT /api/profile` saves the names and both
+// bios together; Prosaurus's work bio (hidden on Greywire) is sent back as
+// loaded, and so is the bio when it wasn't changed (see BioDraft).
 
 data class ProfileEditUiState(
     val profile: Profile? = null,
     val firstName: String = "",
     val lastName: String = "",
+    /** The About bio in the editor; set once the profile loads. */
+    val bio: BioDraft? = null,
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
     val saved: Boolean = false,
@@ -88,6 +93,7 @@ class ProfileEditViewModel(private val repository: ProfileRepository) : ViewMode
                         profile = profile,
                         firstName = profile.firstName.orEmpty(),
                         lastName = profile.lastName.orEmpty(),
+                        bio = BioDraft(profile.bio),
                         isLoading = false
                     )
                 }
@@ -112,7 +118,7 @@ class ProfileEditViewModel(private val repository: ProfileRepository) : ViewMode
             val update = ProfileUpdate(
                 firstName = state.firstName.trim(),
                 lastName = state.lastName.trim(),
-                bio = profile.bio,
+                bio = state.bio?.html() ?: profile.bio,
                 workBio = profile.workBio
             )
             _uiState.value = when (val result = repository.updateProfile(update)) {
@@ -152,7 +158,7 @@ fun ProfileEditScreen(
         }
         Eyebrow("Profile")
         Text(
-            "Your name",
+            "Your name and bio",
             style = MaterialTheme.typography.headlineMedium,
             color = GreywireText,
             modifier = Modifier.semantics { heading() }
@@ -181,6 +187,18 @@ fun ProfileEditScreen(
             testTag = "edit-last-name-input",
             imeAction = ImeAction.Done
         )
+
+        uiState.bio?.let { bio ->
+            Spacer(Modifier.height(32.dp))
+            Eyebrow("About")
+            Text(
+                "Your bio, shown in the About section of your profile.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = GreywireMuted
+            )
+            Spacer(Modifier.height(16.dp))
+            RichBioEditor(draft = bio, label = "Bio", enabled = !uiState.isSaving, testTag = "edit-bio-input")
+        }
 
         uiState.errorMessage?.let { FormError(it, "profile-edit-error") }
 

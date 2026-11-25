@@ -106,6 +106,9 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
+    // Rich-text editing for bios (HTML in and out, like the web's Tiptap editor)
+    implementation("com.mohamedrejeb.richeditor:richeditor-compose:1.2.1")
+
     // Images (profile photos), same as the Prosaurus app
     implementation("io.coil-kt:coil-compose:2.5.0")
 

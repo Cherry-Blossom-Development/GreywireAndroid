@@ -27,7 +27,9 @@ import com.cherryblossomdev.greywire.ui.screens.ChatScreen
 import com.cherryblossomdev.greywire.ui.screens.ChatViewModel
 import com.cherryblossomdev.greywire.ui.screens.FriendsScreen
 import com.cherryblossomdev.greywire.ui.screens.FriendsViewModel
+import com.cherryblossomdev.greywire.ui.screens.MusicBioViewModel
 import com.cherryblossomdev.greywire.ui.screens.ProfileBandScreen
+import com.cherryblossomdev.greywire.ui.screens.ProfileMusicBioScreen
 import com.cherryblossomdev.greywire.ui.screens.ProfileBandViewModel
 import com.cherryblossomdev.greywire.ui.screens.ProfileEditScreen
 import com.cherryblossomdev.greywire.ui.screens.ProfileEditViewModel
@@ -71,6 +73,7 @@ sealed class Screen(val route: String) {
     object ClaimPedal : Screen("claim-pedal")
     // Profile editing (opened from the Profile tab)
     object ProfileEdit : Screen("profile-edit")
+    object ProfileMusicBio : Screen("profile-music-bio")
     // A user_instruments row to edit; no id adds one
     object ProfileInstrument : Screen("profile-instrument?id={id}") {
         fun route(id: Int?) = if (id == null) "profile-instrument" else "profile-instrument?id=$id"
@@ -232,6 +235,7 @@ fun GreywireNavGraph(navController: NavHostController = rememberNavController())
                 ProfileScreen(
                     viewModel = viewModel,
                     onEditProfile = { navController.navigate(Screen.ProfileEdit.route) },
+                    onEditMusicBio = { navController.navigate(Screen.ProfileMusicBio.route) },
                     onEditInstrument = { navController.navigate(Screen.ProfileInstrument.route(it)) },
                     onEditBand = { navController.navigate(Screen.ProfileBand.route(it)) },
                     onLogout = ::performLogout,
@@ -243,6 +247,16 @@ fun GreywireNavGraph(navController: NavHostController = rememberNavController())
             composable(Screen.ProfileEdit.route) {
                 val viewModel = remember { ProfileEditViewModel(deps.profileRepository) }
                 ProfileEditScreen(
+                    viewModel = viewModel,
+                    onBack = { navController.popBackStack() },
+                    onSaved = { navController.popBackStack() },
+                    onSessionExpired = ::performLogout
+                )
+            }
+
+            composable(Screen.ProfileMusicBio.route) {
+                val viewModel = remember { MusicBioViewModel(deps.profileRepository) }
+                ProfileMusicBioScreen(
                     viewModel = viewModel,
                     onBack = { navController.popBackStack() },
                     onSaved = { navController.popBackStack() },

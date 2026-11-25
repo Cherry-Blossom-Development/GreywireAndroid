@@ -199,6 +199,7 @@ class ProfileViewModel(private val repository: ProfileRepository) : ViewModel() 
 fun ProfileScreen(
     viewModel: ProfileViewModel,
     onEditProfile: () -> Unit,
+    onEditMusicBio: () -> Unit,
     onEditInstrument: (Int?) -> Unit,
     onEditBand: (Int?) -> Unit,
     onLogout: () -> Unit,
@@ -260,6 +261,7 @@ fun ProfileScreen(
                             isSaving = uiState.isSavingMusician,
                             error = uiState.musicianError,
                             onMusicianOnlyChange = viewModel::setMusicianOnly,
+                            onEditMusicBio = onEditMusicBio,
                             onEditInstrument = onEditInstrument,
                             onEditBand = onEditBand
                         )
@@ -389,6 +391,7 @@ private fun MusicianSections(
     isSaving: Boolean,
     error: String?,
     onMusicianOnlyChange: (Boolean) -> Unit,
+    onEditMusicBio: () -> Unit,
     /** A user_instruments row id to edit, or null to add one. */
     onEditInstrument: (Int?) -> Unit,
     /** A user_band_history row id to edit, or null to add one. */
@@ -401,6 +404,10 @@ private fun MusicianSections(
             Spacer(Modifier.height(12.dp))
         }
         BioText(musician.bio, empty = "No music bio yet.")
+        Spacer(Modifier.height(16.dp))
+        GreywireGhostButton(onClick = onEditMusicBio, modifier = Modifier.testTag("edit-music-bio-button")) {
+            Text("Edit music bio", style = MaterialTheme.typography.labelMedium)
+        }
         ListDivider()
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
