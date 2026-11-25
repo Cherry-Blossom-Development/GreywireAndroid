@@ -2,9 +2,12 @@ package com.cherryblossomdev.greywire.network
 
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Path
 
 // Profile endpoints (Breakroom/backend/routes/profile.js). The JSON is camelCase.
 // With X-Site: greywire the profile includes the Musician Profile (`musician`),
@@ -106,6 +109,21 @@ data class MusicianUpdate(val bio: String, val musicianOnly: Boolean)
 /** The Musician Profile endpoints answer with the whole updated Musician Profile. */
 data class MusicianResponse(val musician: MusicianProfile)
 
+/**
+ * An instrument's details. [instrumentId] is sent when adding only (an added
+ * instrument can't be changed to another one, just removed). Nulls are left
+ * out of the JSON, which the backend reads as "not set".
+ */
+data class InstrumentUpdate(
+    val instrumentId: Int? = null,
+    /** "beginner", "intermediate", "advanced", "professional" or null. */
+    val skillLevel: String?,
+    /** 0 to 100, or null. */
+    val yearsPlaying: Int?,
+    /** Only one instrument is the main one; setting it clears the others. */
+    val isPrimary: Boolean
+)
+
 interface ProfileApiService {
 
     /** The signed-in user's own profile. */
@@ -119,4 +137,22 @@ interface ProfileApiService {
     /** Music bio and the musician-only setting (Greywire only). */
     @PUT("api/profile/musician")
     suspend fun updateMusician(@Header("Authorization") token: String, @Body body: MusicianUpdate): Response<MusicianResponse>
+
+    /** The instrument list (the same one the session upload uses). */
+    @GET("api/instruments")
+    suspend fun getInstruments(@Header("Authorization") token: String): Response<InstrumentsResponse>
+
+    @POST("api/profile/musician/instruments")
+    suspend fun addInstrument(@Header("Authorization") token: String, @Body body: InstrumentUpdate): Response<MusicianResponse>
+
+    /** [id] is the user_instruments row ([ProfileInstrument.id]). */
+    @PUT("api/profile/musician/instruments/{id}")
+    suspend fun updateInstrument(
+        @Header("Authorization") token: String,
+        @Path("id") id: Int,
+        @Body body: InstrumentUpdate
+    ): Response<MusicianResponse>
+
+    @DELETE("api/profile/musician/instruments/{id}")
+    suspend fun removeInstrument(@Header("Authorization") token: String, @Path("id") id: Int): Response<MusicianResponse>
 }

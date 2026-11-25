@@ -17,6 +17,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SwitchColors
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,7 +47,11 @@ import com.cherryblossomdev.greywire.ui.components.GreywireTopBar
 import com.cherryblossomdev.greywire.ui.components.LoadingFill
 import com.cherryblossomdev.greywire.ui.components.greywireTextFieldColors
 import com.cherryblossomdev.greywire.ui.components.readableWidth
+import com.cherryblossomdev.greywire.ui.theme.GreywireBg
+import com.cherryblossomdev.greywire.ui.theme.GreywireCopper
+import com.cherryblossomdev.greywire.ui.theme.GreywireLine
 import com.cherryblossomdev.greywire.ui.theme.GreywireMuted
+import com.cherryblossomdev.greywire.ui.theme.GreywireSurface2
 import com.cherryblossomdev.greywire.ui.theme.GreywireText
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -245,6 +251,16 @@ internal fun FormError(message: String, testTag: String) {
         modifier = Modifier.testTag(testTag).semantics { liveRegion = LiveRegionMode.Polite }
     )
 }
+
+/** A Switch in the site's colors: copper when on. */
+@Composable
+internal fun greywireSwitchColors(): SwitchColors = SwitchDefaults.colors(
+    checkedThumbColor = GreywireBg,
+    checkedTrackColor = GreywireCopper,
+    uncheckedThumbColor = GreywireMuted,
+    uncheckedTrackColor = GreywireSurface2,
+    uncheckedBorderColor = GreywireLine
+)
 
 @Composable
 internal fun SaveButton(isSaving: Boolean, onClick: () -> Unit, testTag: String, label: String = "Save") {

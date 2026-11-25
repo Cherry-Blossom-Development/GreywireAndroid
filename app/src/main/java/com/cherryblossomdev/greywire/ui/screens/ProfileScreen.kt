@@ -1,6 +1,11 @@
 package com.cherryblossomdev.greywire.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material3.Icon
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,7 +20,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -50,10 +54,7 @@ import com.cherryblossomdev.greywire.ui.components.countLabel
 import com.cherryblossomdev.greywire.ui.components.isBlankHtml
 import com.cherryblossomdev.greywire.ui.components.parseBackendDate
 import com.cherryblossomdev.greywire.ui.components.readableWidth
-import com.cherryblossomdev.greywire.ui.theme.GreywireBg
-import com.cherryblossomdev.greywire.ui.theme.GreywireCopper
 import com.cherryblossomdev.greywire.ui.theme.GreywireLine
-import com.cherryblossomdev.greywire.ui.theme.GreywireSurface2
 import com.cherryblossomdev.greywire.ui.theme.GreywireMuted
 import com.cherryblossomdev.greywire.ui.theme.GreywireSignal
 import com.cherryblossomdev.greywire.ui.theme.GreywireText
@@ -125,6 +126,7 @@ class ProfileViewModel(private val repository: ProfileRepository) : ViewModel() 
 fun ProfileScreen(
     viewModel: ProfileViewModel,
     onEditProfile: () -> Unit,
+    onEditInstrument: (Int?) -> Unit,
     onLogout: () -> Unit,
     onSessionExpired: () -> Unit
 ) {
@@ -170,7 +172,8 @@ fun ProfileScreen(
                             musician = it,
                             isSaving = uiState.isSavingMusician,
                             error = uiState.musicianError,
-                            onMusicianOnlyChange = viewModel::setMusicianOnly
+                            onMusicianOnlyChange = viewModel::setMusicianOnly,
+                            onEditInstrument = onEditInstrument
                         )
                     }
                     DetailsSection(profile)
@@ -233,7 +236,9 @@ private fun MusicianSections(
     musician: MusicianProfile,
     isSaving: Boolean,
     error: String?,
-    onMusicianOnlyChange: (Boolean) -> Unit
+    onMusicianOnlyChange: (Boolean) -> Unit,
+    /** A user_instruments row id to edit, or null to add one. */
+    onEditInstrument: (Int?) -> Unit
 ) {
     Eyebrow("Musician profile")
     GreywireCard(modifier = Modifier.testTag("musician-profile")) {
@@ -258,13 +263,7 @@ private fun MusicianSections(
                 checked = musician.musicianOnly,
                 onCheckedChange = onMusicianOnlyChange,
                 enabled = !isSaving,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = GreywireBg,
-                    checkedTrackColor = GreywireCopper,
-                    uncheckedThumbColor = GreywireMuted,
-                    uncheckedTrackColor = GreywireSurface2,
-                    uncheckedBorderColor = GreywireLine
-                ),
+                colors = greywireSwitchColors(),
                 modifier = Modifier.testTag("musician-only-switch")
             )
         }
@@ -282,8 +281,15 @@ private fun MusicianSections(
         } else {
             musician.instruments.forEachIndexed { index, instrument ->
                 if (index > 0) ListDivider()
-                InstrumentRow(instrument)
+                InstrumentRow(instrument, onClick = { onEditInstrument(instrument.id) })
             }
+        }
+        Spacer(Modifier.height(16.dp))
+        GreywireGhostButton(
+            onClick = { onEditInstrument(null) },
+            modifier = Modifier.fillMaxWidth().testTag("add-instrument-button")
+        ) {
+            Text("Add instrument", style = MaterialTheme.typography.labelMedium)
         }
     }
     Spacer(Modifier.height(24.dp))
@@ -303,8 +309,8 @@ private fun MusicianSections(
 }
 
 @Composable
-private fun InstrumentRow(instrument: ProfileInstrument) {
-    Column(modifier = Modifier.fillMaxWidth().testTag("profile-instrument-${instrument.id}")) {
+private fun InstrumentRow(instrument: ProfileInstrument, onClick: () -> Unit) {
+    EditableRow(onClick = onClick, editLabel = "Edit ${instrument.name}", testTag = "profile-instrument-${instrument.id}") {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(instrument.name, style = MaterialTheme.typography.titleMedium, color = GreywireText)
             if (instrument.isPrimary) StatusPill("Main")
@@ -313,6 +319,22 @@ private fun InstrumentRow(instrument: ProfileInstrument) {
             Spacer(Modifier.height(2.dp))
             Text(it, style = MaterialTheme.typography.bodySmall, color = GreywireMuted)
         }
+    }
+}
+
+/** A list row that opens its editor when tapped, with a pencil at the end. */
+@Composable
+private fun EditableRow(onClick: () -> Unit, editLabel: String, testTag: String, content: @Composable () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClickLabel = editLabel, onClick = onClick)
+            .testTag(testTag)
+    ) {
+        Column(modifier = Modifier.weight(1f)) { content() }
+        Spacer(Modifier.width(12.dp))
+        Icon(Icons.Outlined.Edit, contentDescription = null, tint = GreywireMuted, modifier = Modifier.size(18.dp))
     }
 }
 

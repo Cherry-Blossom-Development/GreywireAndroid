@@ -489,13 +489,13 @@ private fun FileCard(uiState: SessionUploadUiState, enabled: Boolean, onPick: ()
 }
 
 @Composable
-private fun FieldLabel(text: String) {
+internal fun FieldLabel(text: String) {
     Text(text, style = MaterialTheme.typography.bodySmall, color = GreywireMuted, modifier = Modifier.padding(bottom = 8.dp))
 }
 
 /** One of a row of mutually exclusive options: copper when selected. */
 @Composable
-private fun ChoiceButton(label: String, selected: Boolean, enabled: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun ChoiceButton(label: String, selected: Boolean, enabled: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .height(44.dp)
@@ -516,7 +516,7 @@ private fun ChoiceButton(label: String, selected: Boolean, enabled: Boolean, onC
 /** A dropdown of [options] (id to name) plus a "none" choice. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PickerField(
+internal fun PickerField(
     label: String,
     noneLabel: String,
     options: List<Pair<Int, String>>,

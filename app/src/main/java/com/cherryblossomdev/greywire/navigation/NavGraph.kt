@@ -29,6 +29,8 @@ import com.cherryblossomdev.greywire.ui.screens.FriendsScreen
 import com.cherryblossomdev.greywire.ui.screens.FriendsViewModel
 import com.cherryblossomdev.greywire.ui.screens.ProfileEditScreen
 import com.cherryblossomdev.greywire.ui.screens.ProfileEditViewModel
+import com.cherryblossomdev.greywire.ui.screens.ProfileInstrumentScreen
+import com.cherryblossomdev.greywire.ui.screens.ProfileInstrumentViewModel
 import com.cherryblossomdev.greywire.ui.screens.ProfileScreen
 import com.cherryblossomdev.greywire.ui.screens.ProfileViewModel
 import com.cherryblossomdev.greywire.ui.screens.SessionsScreen
@@ -67,6 +69,10 @@ sealed class Screen(val route: String) {
     object ClaimPedal : Screen("claim-pedal")
     // Profile editing (opened from the Profile tab)
     object ProfileEdit : Screen("profile-edit")
+    // A user_instruments row to edit; no id adds one
+    object ProfileInstrument : Screen("profile-instrument?id={id}") {
+        fun route(id: Int?) = if (id == null) "profile-instrument" else "profile-instrument?id=$id"
+    }
     object Legal : Screen("legal")
     object Eula : Screen("eula")
     object PrivacyPolicy : Screen("privacy-policy")
@@ -219,6 +225,7 @@ fun GreywireNavGraph(navController: NavHostController = rememberNavController())
                 ProfileScreen(
                     viewModel = viewModel,
                     onEditProfile = { navController.navigate(Screen.ProfileEdit.route) },
+                    onEditInstrument = { navController.navigate(Screen.ProfileInstrument.route(it)) },
                     onLogout = ::performLogout,
                     onSessionExpired = ::performLogout
                 )
@@ -231,6 +238,23 @@ fun GreywireNavGraph(navController: NavHostController = rememberNavController())
                     viewModel = viewModel,
                     onBack = { navController.popBackStack() },
                     onSaved = { navController.popBackStack() },
+                    onSessionExpired = ::performLogout
+                )
+            }
+
+            composable(
+                Screen.ProfileInstrument.route,
+                arguments = listOf(navArgument("id") {
+                    type = NavType.IntType
+                    defaultValue = -1
+                })
+            ) { entry ->
+                val rowId = entry.arguments?.getInt("id")?.takeIf { it > 0 }
+                val viewModel = remember { ProfileInstrumentViewModel(deps.profileRepository, rowId) }
+                ProfileInstrumentScreen(
+                    viewModel = viewModel,
+                    onBack = { navController.popBackStack() },
+                    onDone = { navController.popBackStack() },
                     onSessionExpired = ::performLogout
                 )
             }
