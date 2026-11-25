@@ -41,6 +41,7 @@ import com.cherryblossomdev.greywire.data.AuthResult
 import com.cherryblossomdev.greywire.data.FriendsRepository
 import com.cherryblossomdev.greywire.network.FriendUser
 import com.cherryblossomdev.greywire.ui.components.EmptyStateCard
+import com.cherryblossomdev.greywire.ui.components.popupTestTags
 import com.cherryblossomdev.greywire.ui.components.ErrorText
 import com.cherryblossomdev.greywire.ui.components.Eyebrow
 import com.cherryblossomdev.greywire.ui.components.GreywireCard
@@ -359,6 +360,7 @@ internal fun ConfirmDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier = Modifier.popupTestTags(),
         containerColor = GreywireSurface,
         titleContentColor = GreywireText,
         textContentColor = GreywireMuted,

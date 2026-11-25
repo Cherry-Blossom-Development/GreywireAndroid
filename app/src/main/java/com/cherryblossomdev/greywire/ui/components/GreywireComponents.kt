@@ -44,6 +44,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -64,6 +66,14 @@ import com.cherryblossomdev.greywire.ui.theme.SpaceGrotesk
 
 // Compose versions of the website's building blocks (GreywireStudio-Website
 // css/site.css). The class each one mirrors is noted above it.
+
+/**
+ * For the content of a dialog or dropdown menu. They open in their own window,
+ * which doesn't inherit MainActivity's `testTagsAsResourceId`, so without this
+ * their test tags (such as `confirm-button`) are invisible to Appium.
+ */
+@OptIn(ExperimentalComposeUiApi::class)
+fun Modifier.popupTestTags(): Modifier = semantics { testTagsAsResourceId = true }
 
 /** `.brand`: the logo plus "Greywire Studio", with "Studio" in muted. */
 @Composable

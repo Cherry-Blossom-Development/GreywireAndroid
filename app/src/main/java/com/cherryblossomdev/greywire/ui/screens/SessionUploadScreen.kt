@@ -79,6 +79,7 @@ import com.cherryblossomdev.greywire.ui.components.GreywireCard
 import com.cherryblossomdev.greywire.ui.components.GreywireGhostButton
 import com.cherryblossomdev.greywire.ui.components.GreywireTopBar
 import com.cherryblossomdev.greywire.ui.components.greywireTextFieldColors
+import com.cherryblossomdev.greywire.ui.components.popupTestTags
 import com.cherryblossomdev.greywire.ui.components.readableWidth
 import com.cherryblossomdev.greywire.ui.theme.GreywireBg
 import com.cherryblossomdev.greywire.ui.theme.GreywireCopper
@@ -541,7 +542,12 @@ internal fun PickerField(
                 .fillMaxWidth()
                 .testTag(testTag)
         )
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, containerColor = GreywireSurface) {
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            containerColor = GreywireSurface,
+            modifier = Modifier.popupTestTags()
+        ) {
             DropdownMenuItem(
                 text = { Text(noneLabel, color = GreywireMuted) },
                 onClick = { onSelect(null); expanded = false }
@@ -572,6 +578,7 @@ private fun RecordedDateDialog(initialMillis: Long?, onConfirm: (Long?) -> Unit,
     )
     DatePickerDialog(
         onDismissRequest = onDismiss,
+        modifier = Modifier.popupTestTags(),
         confirmButton = {
             TextButton(onClick = { onConfirm(state.selectedDateMillis) }, modifier = Modifier.testTag("date-confirm-button")) {
                 Text("OK", color = GreywireCopper)

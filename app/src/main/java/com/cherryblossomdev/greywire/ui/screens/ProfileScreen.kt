@@ -72,6 +72,7 @@ import com.cherryblossomdev.greywire.ui.components.StatusPill
 import com.cherryblossomdev.greywire.ui.components.countLabel
 import com.cherryblossomdev.greywire.ui.components.isBlankHtml
 import com.cherryblossomdev.greywire.ui.components.parseBackendDate
+import com.cherryblossomdev.greywire.ui.components.popupTestTags
 import com.cherryblossomdev.greywire.ui.components.readableWidth
 import com.cherryblossomdev.greywire.ui.theme.GreywireLine
 import com.cherryblossomdev.greywire.ui.theme.GreywireMuted
@@ -311,7 +312,12 @@ private fun PhotoButton(hasPhoto: Boolean, isSaving: Boolean, onPick: (Uri) -> U
                 Text(if (hasPhoto) "Change photo" else "Add photo", style = MaterialTheme.typography.labelMedium)
             }
         }
-        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }, containerColor = GreywireSurface) {
+        DropdownMenu(
+            expanded = menuOpen,
+            onDismissRequest = { menuOpen = false },
+            containerColor = GreywireSurface,
+            modifier = Modifier.popupTestTags()
+        ) {
             DropdownMenuItem(
                 text = { Text("Choose a new photo", color = GreywireText) },
                 onClick = {
