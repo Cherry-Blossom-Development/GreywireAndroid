@@ -1,8 +1,10 @@
 package com.cherryblossomdev.greywire.network
 
 import retrofit2.Response
+import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.PUT
 
 // Profile endpoints (Breakroom/backend/routes/profile.js). The JSON is camelCase.
 // With X-Site: greywire the profile includes the Musician Profile (`musician`),
@@ -19,6 +21,11 @@ data class Profile(
     val email: String? = null,
     /** Rich text (HTML) from the website's editor. Null on someone else's musician-only profile. */
     val bio: String? = null,
+    /**
+     * Prosaurus's work bio (your own profile only). Greywire doesn't show it,
+     * but `PUT /api/profile` saves it with the names, so edits send it back unchanged.
+     */
+    val workBio: String? = null,
     /** Served at /api/uploads/<photoPath>. */
     val photoPath: String? = null,
     val createdAt: String? = null,
@@ -80,9 +87,26 @@ data class ProfileBand(
 
 data class ProfileResponse(val user: Profile)
 
+/**
+ * `PUT /api/profile` replaces all four fields, so send the bios as they are
+ * when only the names change (null stays null).
+ */
+data class ProfileUpdate(
+    val firstName: String,
+    val lastName: String,
+    val bio: String?,
+    val workBio: String?
+)
+
+data class MessageOnlyResponse(val message: String? = null)
+
 interface ProfileApiService {
 
     /** The signed-in user's own profile. */
     @GET("api/profile")
     suspend fun getProfile(@Header("Authorization") token: String): Response<ProfileResponse>
+
+    /** Names and bios. */
+    @PUT("api/profile")
+    suspend fun updateProfile(@Header("Authorization") token: String, @Body body: ProfileUpdate): Response<MessageOnlyResponse>
 }

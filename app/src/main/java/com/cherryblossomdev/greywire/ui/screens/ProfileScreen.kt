@@ -61,7 +61,7 @@ import java.util.Locale
 // The Profile tab (roadmap 2.9 and 2.10): the user's own profile as the web
 // community's Profile page shows it on Greywire: photo, name, About, the
 // Musician Profile (music bio, instruments, bands) and Details. Greywire
-// leaves out Prosaurus's work history. Editing comes in later steps.
+// leaves out Prosaurus's work history. "Edit profile" opens ProfileEditScreen.
 
 data class ProfileUiState(
     val profile: Profile? = null,
@@ -92,7 +92,12 @@ class ProfileViewModel(private val repository: ProfileRepository) : ViewModel() 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(viewModel: ProfileViewModel, onLogout: () -> Unit, onSessionExpired: () -> Unit) {
+fun ProfileScreen(
+    viewModel: ProfileViewModel,
+    onEditProfile: () -> Unit,
+    onLogout: () -> Unit,
+    onSessionExpired: () -> Unit
+) {
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit) { viewModel.load() }
@@ -124,6 +129,10 @@ fun ProfileScreen(viewModel: ProfileViewModel, onLogout: () -> Unit, onSessionEx
                 }
                 if (profile != null) {
                     ProfileHeader(profile)
+                    Spacer(Modifier.height(16.dp))
+                    GreywireGhostButton(onClick = onEditProfile, modifier = Modifier.testTag("edit-profile-button")) {
+                        Text("Edit profile", style = MaterialTheme.typography.labelMedium)
+                    }
                     Spacer(Modifier.height(32.dp))
                     AboutSection(profile)
                     profile.musician?.let { MusicianSections(it) }

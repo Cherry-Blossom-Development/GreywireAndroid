@@ -27,6 +27,8 @@ import com.cherryblossomdev.greywire.ui.screens.ChatScreen
 import com.cherryblossomdev.greywire.ui.screens.ChatViewModel
 import com.cherryblossomdev.greywire.ui.screens.FriendsScreen
 import com.cherryblossomdev.greywire.ui.screens.FriendsViewModel
+import com.cherryblossomdev.greywire.ui.screens.ProfileEditScreen
+import com.cherryblossomdev.greywire.ui.screens.ProfileEditViewModel
 import com.cherryblossomdev.greywire.ui.screens.ProfileScreen
 import com.cherryblossomdev.greywire.ui.screens.ProfileViewModel
 import com.cherryblossomdev.greywire.ui.screens.SessionsScreen
@@ -63,6 +65,8 @@ sealed class Screen(val route: String) {
     object Friends : Screen(GreywireTab.Friends.route)
     object Profile : Screen(GreywireTab.Profile.route)
     object ClaimPedal : Screen("claim-pedal")
+    // Profile editing (opened from the Profile tab)
+    object ProfileEdit : Screen("profile-edit")
     object Legal : Screen("legal")
     object Eula : Screen("eula")
     object PrivacyPolicy : Screen("privacy-policy")
@@ -212,7 +216,23 @@ fun GreywireNavGraph(navController: NavHostController = rememberNavController())
             }
             composable(Screen.Profile.route) {
                 val viewModel = remember { ProfileViewModel(deps.profileRepository) }
-                ProfileScreen(viewModel = viewModel, onLogout = ::performLogout, onSessionExpired = ::performLogout)
+                ProfileScreen(
+                    viewModel = viewModel,
+                    onEditProfile = { navController.navigate(Screen.ProfileEdit.route) },
+                    onLogout = ::performLogout,
+                    onSessionExpired = ::performLogout
+                )
+            }
+
+            // The Profile tab reloads when it comes back on screen, so saving just goes back
+            composable(Screen.ProfileEdit.route) {
+                val viewModel = remember { ProfileEditViewModel(deps.profileRepository) }
+                ProfileEditScreen(
+                    viewModel = viewModel,
+                    onBack = { navController.popBackStack() },
+                    onSaved = { navController.popBackStack() },
+                    onSessionExpired = ::performLogout
+                )
             }
 
             composable(Screen.ClaimPedal.route) {
