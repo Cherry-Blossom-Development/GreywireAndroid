@@ -124,6 +124,17 @@ data class InstrumentUpdate(
     val isPrimary: Boolean
 )
 
+/** A band in the user's history. Years are 1900 to next year; [endYear] is ignored when [isCurrent]. */
+data class BandUpdate(
+    /** Required, up to 100 characters. */
+    val bandName: String,
+    /** Up to 100 characters, or null. */
+    val role: String?,
+    val startYear: Int?,
+    val endYear: Int?,
+    val isCurrent: Boolean
+)
+
 interface ProfileApiService {
 
     /** The signed-in user's own profile. */
@@ -155,4 +166,18 @@ interface ProfileApiService {
 
     @DELETE("api/profile/musician/instruments/{id}")
     suspend fun removeInstrument(@Header("Authorization") token: String, @Path("id") id: Int): Response<MusicianResponse>
+
+    @POST("api/profile/musician/bands")
+    suspend fun addBand(@Header("Authorization") token: String, @Body body: BandUpdate): Response<MusicianResponse>
+
+    /** [id] is the user_band_history row ([ProfileBand.id]). */
+    @PUT("api/profile/musician/bands/{id}")
+    suspend fun updateBand(
+        @Header("Authorization") token: String,
+        @Path("id") id: Int,
+        @Body body: BandUpdate
+    ): Response<MusicianResponse>
+
+    @DELETE("api/profile/musician/bands/{id}")
+    suspend fun removeBand(@Header("Authorization") token: String, @Path("id") id: Int): Response<MusicianResponse>
 }

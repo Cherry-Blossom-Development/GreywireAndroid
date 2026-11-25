@@ -27,6 +27,8 @@ import com.cherryblossomdev.greywire.ui.screens.ChatScreen
 import com.cherryblossomdev.greywire.ui.screens.ChatViewModel
 import com.cherryblossomdev.greywire.ui.screens.FriendsScreen
 import com.cherryblossomdev.greywire.ui.screens.FriendsViewModel
+import com.cherryblossomdev.greywire.ui.screens.ProfileBandScreen
+import com.cherryblossomdev.greywire.ui.screens.ProfileBandViewModel
 import com.cherryblossomdev.greywire.ui.screens.ProfileEditScreen
 import com.cherryblossomdev.greywire.ui.screens.ProfileEditViewModel
 import com.cherryblossomdev.greywire.ui.screens.ProfileInstrumentScreen
@@ -72,6 +74,10 @@ sealed class Screen(val route: String) {
     // A user_instruments row to edit; no id adds one
     object ProfileInstrument : Screen("profile-instrument?id={id}") {
         fun route(id: Int?) = if (id == null) "profile-instrument" else "profile-instrument?id=$id"
+    }
+    // A user_band_history row to edit; no id adds one
+    object ProfileBand : Screen("profile-band?id={id}") {
+        fun route(id: Int?) = if (id == null) "profile-band" else "profile-band?id=$id"
     }
     object Legal : Screen("legal")
     object Eula : Screen("eula")
@@ -226,6 +232,7 @@ fun GreywireNavGraph(navController: NavHostController = rememberNavController())
                     viewModel = viewModel,
                     onEditProfile = { navController.navigate(Screen.ProfileEdit.route) },
                     onEditInstrument = { navController.navigate(Screen.ProfileInstrument.route(it)) },
+                    onEditBand = { navController.navigate(Screen.ProfileBand.route(it)) },
                     onLogout = ::performLogout,
                     onSessionExpired = ::performLogout
                 )
@@ -252,6 +259,23 @@ fun GreywireNavGraph(navController: NavHostController = rememberNavController())
                 val rowId = entry.arguments?.getInt("id")?.takeIf { it > 0 }
                 val viewModel = remember { ProfileInstrumentViewModel(deps.profileRepository, rowId) }
                 ProfileInstrumentScreen(
+                    viewModel = viewModel,
+                    onBack = { navController.popBackStack() },
+                    onDone = { navController.popBackStack() },
+                    onSessionExpired = ::performLogout
+                )
+            }
+
+            composable(
+                Screen.ProfileBand.route,
+                arguments = listOf(navArgument("id") {
+                    type = NavType.IntType
+                    defaultValue = -1
+                })
+            ) { entry ->
+                val rowId = entry.arguments?.getInt("id")?.takeIf { it > 0 }
+                val viewModel = remember { ProfileBandViewModel(deps.profileRepository, rowId) }
+                ProfileBandScreen(
                     viewModel = viewModel,
                     onBack = { navController.popBackStack() },
                     onDone = { navController.popBackStack() },

@@ -127,6 +127,7 @@ fun ProfileScreen(
     viewModel: ProfileViewModel,
     onEditProfile: () -> Unit,
     onEditInstrument: (Int?) -> Unit,
+    onEditBand: (Int?) -> Unit,
     onLogout: () -> Unit,
     onSessionExpired: () -> Unit
 ) {
@@ -173,7 +174,8 @@ fun ProfileScreen(
                             isSaving = uiState.isSavingMusician,
                             error = uiState.musicianError,
                             onMusicianOnlyChange = viewModel::setMusicianOnly,
-                            onEditInstrument = onEditInstrument
+                            onEditInstrument = onEditInstrument,
+                            onEditBand = onEditBand
                         )
                     }
                     DetailsSection(profile)
@@ -238,7 +240,9 @@ private fun MusicianSections(
     error: String?,
     onMusicianOnlyChange: (Boolean) -> Unit,
     /** A user_instruments row id to edit, or null to add one. */
-    onEditInstrument: (Int?) -> Unit
+    onEditInstrument: (Int?) -> Unit,
+    /** A user_band_history row id to edit, or null to add one. */
+    onEditBand: (Int?) -> Unit
 ) {
     Eyebrow("Musician profile")
     GreywireCard(modifier = Modifier.testTag("musician-profile")) {
@@ -301,8 +305,15 @@ private fun MusicianSections(
         } else {
             musician.bands.forEachIndexed { index, band ->
                 if (index > 0) ListDivider()
-                BandRow(band)
+                BandRow(band, onClick = { onEditBand(band.id) })
             }
+        }
+        Spacer(Modifier.height(16.dp))
+        GreywireGhostButton(
+            onClick = { onEditBand(null) },
+            modifier = Modifier.fillMaxWidth().testTag("add-band-button")
+        ) {
+            Text("Add band", style = MaterialTheme.typography.labelMedium)
         }
     }
     Spacer(Modifier.height(32.dp))
@@ -339,8 +350,8 @@ private fun EditableRow(onClick: () -> Unit, editLabel: String, testTag: String,
 }
 
 @Composable
-private fun BandRow(band: ProfileBand) {
-    Column(modifier = Modifier.fillMaxWidth().testTag("profile-band-${band.id}")) {
+private fun BandRow(band: ProfileBand, onClick: () -> Unit) {
+    EditableRow(onClick = onClick, editLabel = "Edit ${band.bandName}", testTag = "profile-band-${band.id}") {
         Text(band.bandName, style = MaterialTheme.typography.titleMedium, color = GreywireText)
         val details = listOfNotNull(band.role, band.years.takeIf { it.isNotEmpty() }).joinToString(" · ")
         if (details.isNotEmpty()) {
