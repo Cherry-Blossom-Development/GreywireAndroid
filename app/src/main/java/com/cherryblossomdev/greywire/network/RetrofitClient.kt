@@ -118,6 +118,9 @@ object RetrofitClient {
     /** [SessionsApiService] with long timeouts; use it for [SessionsApiService.upload]. */
     val sessionsUploadApiService: SessionsApiService = uploadRetrofit.create(SessionsApiService::class.java)
 
+    /** [ProfileApiService] without body logging; use it for [ProfileApiService.uploadPhoto]. */
+    val profileUploadApiService: ProfileApiService = uploadRetrofit.create(ProfileApiService::class.java)
+
     /** A file the backend serves from S3, such as a profile photo: `/api/uploads/<path>`. */
     fun uploadUrl(path: String): String = "${BASE_URL}api/uploads/$path"
 

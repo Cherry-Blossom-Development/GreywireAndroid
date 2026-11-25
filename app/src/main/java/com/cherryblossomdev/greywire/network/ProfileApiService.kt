@@ -1,10 +1,13 @@
 package com.cherryblossomdev.greywire.network
 
+import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.Multipart
+import retrofit2.http.Part
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
@@ -103,6 +106,9 @@ data class ProfileUpdate(
 
 data class MessageOnlyResponse(val message: String? = null)
 
+/** The new photo's key, served at /api/uploads/<photoPath>. */
+data class PhotoResponse(val photoPath: String? = null)
+
 /** `PUT /api/profile/musician` replaces both, so send the bio as loaded when only the switch changes. */
 data class MusicianUpdate(val bio: String, val musicianOnly: Boolean)
 
@@ -166,6 +172,17 @@ interface ProfileApiService {
 
     @DELETE("api/profile/musician/instruments/{id}")
     suspend fun removeInstrument(@Header("Authorization") token: String, @Path("id") id: Int): Response<MusicianResponse>
+
+    /**
+     * A new profile photo: multipart field `photo`, a JPEG, PNG, GIF or WebP
+     * up to 5 MB (the file name's extension must match). Replaces the old one.
+     */
+    @Multipart
+    @POST("api/profile/photo")
+    suspend fun uploadPhoto(@Header("Authorization") token: String, @Part photo: MultipartBody.Part): Response<PhotoResponse>
+
+    @DELETE("api/profile/photo")
+    suspend fun removePhoto(@Header("Authorization") token: String): Response<MessageOnlyResponse>
 
     @POST("api/profile/musician/bands")
     suspend fun addBand(@Header("Authorization") token: String, @Body body: BandUpdate): Response<MusicianResponse>

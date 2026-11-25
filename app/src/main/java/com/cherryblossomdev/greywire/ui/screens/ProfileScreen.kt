@@ -1,6 +1,25 @@
 package com.cherryblossomdev.greywire.ui.screens
 
+import android.content.ContentResolver
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import com.cherryblossomdev.greywire.data.resizePhotoForUpload
+import com.cherryblossomdev.greywire.ui.theme.GreywireCopper
+import com.cherryblossomdev.greywire.ui.theme.GreywireSurface
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -79,6 +98,9 @@ data class ProfileUiState(
     /** Saving the musician-only switch. */
     val isSavingMusician: Boolean = false,
     val musicianError: String? = null,
+    /** Uploading or removing the photo. */
+    val isSavingPhoto: Boolean = false,
+    val photoError: String? = null,
     val sessionExpired: Boolean = false
 )
 
@@ -99,6 +121,51 @@ class ProfileViewModel(private val repository: ProfileRepository) : ViewModel() 
                     isRefreshing = false,
                     sessionExpired = result.unauthorized,
                     errorMessage = result.message
+                )
+            }
+        }
+    }
+
+    /** Shrinks the picked image (see [resizePhotoForUpload]) and uploads it as the profile photo. */
+    fun uploadPhoto(resolver: ContentResolver, uri: Uri) {
+        if (_uiState.value.isSavingPhoto) return
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isSavingPhoto = true, photoError = null)
+            val jpeg = try {
+                withContext(Dispatchers.IO) { resizePhotoForUpload(resolver, uri) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(isSavingPhoto = false, photoError = "That file isn't an image the app can read.")
+                return@launch
+            }
+            _uiState.value = when (val result = repository.uploadPhoto(jpeg)) {
+                is AuthResult.Success -> _uiState.value.copy(
+                    profile = _uiState.value.profile?.copy(photoPath = result.data.photoPath),
+                    isSavingPhoto = false
+                )
+                is AuthResult.Error -> _uiState.value.copy(
+                    isSavingPhoto = false,
+                    sessionExpired = result.unauthorized,
+                    photoError = result.message
+                )
+            }
+        }
+    }
+
+    fun removePhoto() {
+        if (_uiState.value.isSavingPhoto) return
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isSavingPhoto = true, photoError = null)
+            _uiState.value = when (val result = repository.removePhoto()) {
+                is AuthResult.Success -> _uiState.value.copy(
+                    profile = _uiState.value.profile?.copy(photoPath = null),
+                    isSavingPhoto = false
+                )
+                is AuthResult.Error -> _uiState.value.copy(
+                    isSavingPhoto = false,
+                    sessionExpired = result.unauthorized,
+                    photoError = result.message
                 )
             }
         }
@@ -137,6 +204,7 @@ fun ProfileScreen(
     onSessionExpired: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) { viewModel.load() }
     LaunchedEffect(uiState.sessionExpired) {
@@ -168,8 +236,20 @@ fun ProfileScreen(
                 if (profile != null) {
                     ProfileHeader(profile)
                     Spacer(Modifier.height(16.dp))
-                    GreywireGhostButton(onClick = onEditProfile, modifier = Modifier.testTag("edit-profile-button")) {
-                        Text("Edit profile", style = MaterialTheme.typography.labelMedium)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        GreywireGhostButton(onClick = onEditProfile, modifier = Modifier.testTag("edit-profile-button")) {
+                            Text("Edit profile", style = MaterialTheme.typography.labelMedium)
+                        }
+                        PhotoButton(
+                            hasPhoto = !profile.photoPath.isNullOrBlank(),
+                            isSaving = uiState.isSavingPhoto,
+                            onPick = { viewModel.uploadPhoto(context.contentResolver, it) },
+                            onRemove = viewModel::removePhoto
+                        )
+                    }
+                    uiState.photoError?.let {
+                        Spacer(Modifier.height(12.dp))
+                        ErrorText(it, Modifier.testTag("photo-error"))
                     }
                     Spacer(Modifier.height(32.dp))
                     AboutSection(profile)
@@ -190,6 +270,65 @@ fun ProfileScreen(
                     Text("Sign out", style = MaterialTheme.typography.labelMedium)
                 }
                 Spacer(Modifier.height(24.dp))
+            }
+        }
+    }
+}
+
+/**
+ * "Photo": a menu with "Choose a new photo" (Android's photo picker, which
+ * needs no permission) and, when there is one, "Remove photo" (after confirming).
+ */
+@Composable
+private fun PhotoButton(hasPhoto: Boolean, isSaving: Boolean, onPick: (Uri) -> Unit, onRemove: () -> Unit) {
+    var menuOpen by remember { mutableStateOf(false) }
+    var confirmRemove by remember { mutableStateOf(false) }
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        uri?.let(onPick)
+    }
+
+    if (confirmRemove) {
+        ConfirmDialog(
+            title = "Remove your photo?",
+            text = "Your profile will show your initial instead.",
+            confirmLabel = "Remove",
+            dismissLabel = "Cancel",
+            onConfirm = {
+                confirmRemove = false
+                onRemove()
+            },
+            onDismiss = { confirmRemove = false }
+        )
+    }
+
+    Box {
+        GreywireGhostButton(onClick = { menuOpen = true }, enabled = !isSaving, modifier = Modifier.testTag("photo-button")) {
+            if (isSaving) {
+                CircularProgressIndicator(Modifier.size(16.dp), color = GreywireCopper, strokeWidth = 2.dp)
+                Spacer(Modifier.width(8.dp))
+                Text("Saving photo...", style = MaterialTheme.typography.labelMedium)
+            } else {
+                Text(if (hasPhoto) "Change photo" else "Add photo", style = MaterialTheme.typography.labelMedium)
+            }
+        }
+        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }, containerColor = GreywireSurface) {
+            DropdownMenuItem(
+                text = { Text("Choose a new photo", color = GreywireText) },
+                onClick = {
+                    menuOpen = false
+                    picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                },
+                modifier = Modifier.testTag("choose-photo-item")
+            )
+            if (hasPhoto) {
+                DropdownMenuItem(
+                    text = { Text("Remove photo", color = MaterialTheme.colorScheme.error) },
+                    onClick = {
+                        menuOpen = false
+                        confirmRemove = true
+                    },
+                    modifier = Modifier.testTag("remove-photo-item")
+                )
             }
         }
     }

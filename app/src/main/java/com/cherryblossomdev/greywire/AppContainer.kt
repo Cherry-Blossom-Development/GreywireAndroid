@@ -26,5 +26,5 @@ class AppContainer(context: Context) {
     val chatRepository by lazy { ChatRepository(RetrofitClient.chatApiService, tokenManager) }
     val sessionsRepository by lazy { SessionsRepository(RetrofitClient.sessionsApiService, RetrofitClient.sessionsUploadApiService, tokenManager) }
     val friendsRepository by lazy { FriendsRepository(RetrofitClient.friendsApiService, tokenManager) }
-    val profileRepository by lazy { ProfileRepository(RetrofitClient.profileApiService, tokenManager) }
+    val profileRepository by lazy { ProfileRepository(RetrofitClient.profileApiService, RetrofitClient.profileUploadApiService, tokenManager) }
 }
