@@ -1,6 +1,8 @@
 package com.cherryblossomdev.greywire.data
 
 import com.cherryblossomdev.greywire.network.MessageOnlyResponse
+import com.cherryblossomdev.greywire.network.MusicianResponse
+import com.cherryblossomdev.greywire.network.MusicianUpdate
 import com.cherryblossomdev.greywire.network.ProfileApiService
 import com.cherryblossomdev.greywire.network.ProfileResponse
 import com.cherryblossomdev.greywire.network.ProfileUpdate
@@ -14,4 +16,7 @@ class ProfileRepository(
 
     suspend fun updateProfile(update: ProfileUpdate): AuthResult<MessageOnlyResponse> =
         authedCall(tokenManager, "Couldn't save your profile") { api.updateProfile(it, update) }
+
+    suspend fun updateMusician(update: MusicianUpdate): AuthResult<MusicianResponse> =
+        authedCall(tokenManager, "Couldn't save your Musician Profile") { api.updateMusician(it, update) }
 }

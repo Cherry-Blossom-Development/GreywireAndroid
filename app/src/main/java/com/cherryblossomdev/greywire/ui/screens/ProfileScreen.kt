@@ -14,6 +14,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -31,6 +33,7 @@ import androidx.lifecycle.viewModelScope
 import com.cherryblossomdev.greywire.data.AuthResult
 import com.cherryblossomdev.greywire.data.ProfileRepository
 import com.cherryblossomdev.greywire.network.MusicianProfile
+import com.cherryblossomdev.greywire.network.MusicianUpdate
 import com.cherryblossomdev.greywire.network.Profile
 import com.cherryblossomdev.greywire.network.ProfileBand
 import com.cherryblossomdev.greywire.network.ProfileInstrument
@@ -47,7 +50,10 @@ import com.cherryblossomdev.greywire.ui.components.countLabel
 import com.cherryblossomdev.greywire.ui.components.isBlankHtml
 import com.cherryblossomdev.greywire.ui.components.parseBackendDate
 import com.cherryblossomdev.greywire.ui.components.readableWidth
+import com.cherryblossomdev.greywire.ui.theme.GreywireBg
+import com.cherryblossomdev.greywire.ui.theme.GreywireCopper
 import com.cherryblossomdev.greywire.ui.theme.GreywireLine
+import com.cherryblossomdev.greywire.ui.theme.GreywireSurface2
 import com.cherryblossomdev.greywire.ui.theme.GreywireMuted
 import com.cherryblossomdev.greywire.ui.theme.GreywireSignal
 import com.cherryblossomdev.greywire.ui.theme.GreywireText
@@ -67,6 +73,9 @@ data class ProfileUiState(
     val profile: Profile? = null,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
+    /** Saving the musician-only switch. */
+    val isSavingMusician: Boolean = false,
+    val musicianError: String? = null,
     val sessionExpired: Boolean = false
 )
 
@@ -84,6 +93,27 @@ class ProfileViewModel(private val repository: ProfileRepository) : ViewModel() 
                     isLoading = false,
                     sessionExpired = result.unauthorized,
                     errorMessage = result.message
+                )
+            }
+        }
+    }
+
+    /** "Show only my Musician Profile": hides the About section from others on Greywire. */
+    fun setMusicianOnly(musicianOnly: Boolean) {
+        val musician = _uiState.value.profile?.musician ?: return
+        if (_uiState.value.isSavingMusician) return
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isSavingMusician = true, musicianError = null)
+            val update = MusicianUpdate(bio = musician.bio.orEmpty(), musicianOnly = musicianOnly)
+            _uiState.value = when (val result = repository.updateMusician(update)) {
+                is AuthResult.Success -> _uiState.value.copy(
+                    profile = _uiState.value.profile?.copy(musician = result.data.musician),
+                    isSavingMusician = false
+                )
+                is AuthResult.Error -> _uiState.value.copy(
+                    isSavingMusician = false,
+                    sessionExpired = result.unauthorized,
+                    musicianError = result.message
                 )
             }
         }
@@ -135,7 +165,14 @@ fun ProfileScreen(
                     }
                     Spacer(Modifier.height(32.dp))
                     AboutSection(profile)
-                    profile.musician?.let { MusicianSections(it) }
+                    profile.musician?.let {
+                        MusicianSections(
+                            musician = it,
+                            isSaving = uiState.isSavingMusician,
+                            error = uiState.musicianError,
+                            onMusicianOnlyChange = viewModel::setMusicianOnly
+                        )
+                    }
                     DetailsSection(profile)
                 }
                 Spacer(Modifier.height(32.dp))
@@ -192,7 +229,12 @@ private fun AboutSection(profile: Profile) {
 
 /** The Musician Profile (Greywire only): music bio, instruments and bands. */
 @Composable
-private fun MusicianSections(musician: MusicianProfile) {
+private fun MusicianSections(
+    musician: MusicianProfile,
+    isSaving: Boolean,
+    error: String?,
+    onMusicianOnlyChange: (Boolean) -> Unit
+) {
     Eyebrow("Musician profile")
     GreywireCard(modifier = Modifier.testTag("musician-profile")) {
         if (musician.musicianOnly) {
@@ -200,6 +242,36 @@ private fun MusicianSections(musician: MusicianProfile) {
             Spacer(Modifier.height(12.dp))
         }
         BioText(musician.bio, empty = "No music bio yet.")
+        ListDivider()
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text("Show only my Musician Profile", style = MaterialTheme.typography.titleMedium, color = GreywireText)
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    "Others on Greywire see your music bio, instruments and bands, but not your About section.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = GreywireMuted
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+            Switch(
+                checked = musician.musicianOnly,
+                onCheckedChange = onMusicianOnlyChange,
+                enabled = !isSaving,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = GreywireBg,
+                    checkedTrackColor = GreywireCopper,
+                    uncheckedThumbColor = GreywireMuted,
+                    uncheckedTrackColor = GreywireSurface2,
+                    uncheckedBorderColor = GreywireLine
+                ),
+                modifier = Modifier.testTag("musician-only-switch")
+            )
+        }
+        error?.let {
+            Spacer(Modifier.height(12.dp))
+            ErrorText(it, Modifier.testTag("musician-error"))
+        }
     }
     Spacer(Modifier.height(24.dp))
 

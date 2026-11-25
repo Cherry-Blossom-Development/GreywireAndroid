@@ -100,6 +100,12 @@ data class ProfileUpdate(
 
 data class MessageOnlyResponse(val message: String? = null)
 
+/** `PUT /api/profile/musician` replaces both, so send the bio as loaded when only the switch changes. */
+data class MusicianUpdate(val bio: String, val musicianOnly: Boolean)
+
+/** The Musician Profile endpoints answer with the whole updated Musician Profile. */
+data class MusicianResponse(val musician: MusicianProfile)
+
 interface ProfileApiService {
 
     /** The signed-in user's own profile. */
@@ -109,4 +115,8 @@ interface ProfileApiService {
     /** Names and bios. */
     @PUT("api/profile")
     suspend fun updateProfile(@Header("Authorization") token: String, @Body body: ProfileUpdate): Response<MessageOnlyResponse>
+
+    /** Music bio and the musician-only setting (Greywire only). */
+    @PUT("api/profile/musician")
+    suspend fun updateMusician(@Header("Authorization") token: String, @Body body: MusicianUpdate): Response<MusicianResponse>
 }
