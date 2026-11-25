@@ -17,9 +17,12 @@ Loose ends to address later. **Features are planned in `ROADMAP.md`**, not here.
 - **Splash icon size.** On Android 12+ the splash icon nearly fills its circle. The adaptive foreground (`ic_launcher_foreground.xml`, scale 1.2) could be a bit smaller.
 - **Sign out button.** The outlined "ghost" button in the header has a faint fill; the website's ghost button is fully transparent. Check `GreywireGhostButton` colors.
 
+- **Heading in the bio editor.** After pressing Enter at the end of a heading, the new line stays a heading, and the H button can't turn it off until something is typed (a `compose-rich-editor` quirk; the web's Tiptap starts a normal paragraph). Type, then tap H. A fix could watch for Enter after a heading and reset the new paragraph.
+- **Unsaved changes.** Back on the profile edit screens (Edit profile, music bio, instrument, band) discards changes without asking. Consider a "Discard changes?" confirmation.
+
 ## Testing
 
-- **Dialog test tags aren't visible to Appium.** `testTagsAsResourceId` is set only on the activity's root (`MainActivity`), and dialogs (`ConfirmDialog`, the date picker) are separate windows, so `confirm-button` (Friends, Sessions' delete) and `date-confirm-button` don't show up as resource-ids. Found 2026-11-24 while testing delete; tapping by text works. Fix: set `testTagsAsResourceId = true` in the dialogs' content too.
+- **Popups need `Modifier.popupTestTags()`.** Dialogs and dropdown menus are separate windows that don't inherit `testTagsAsResourceId` from `MainActivity`. Use the modifier on any new one (fixed 2026-11-25 for the existing ones).
 
 ## Dev environment notes
 

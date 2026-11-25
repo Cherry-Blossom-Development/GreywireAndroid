@@ -15,17 +15,19 @@ Small loose ends (polish, dev notes) stay in `TODO.md`. Update this file as each
 
 **Status key:** `done` · `wip` · `todo` · `n/a` (nothing needed in that project) · `?` (not yet checked)
 
-## Where we left off (updated 2026-11-24, end of day)
+## Where we left off (updated 2026-11-25)
 
-**Done today on Android:** 2.2 upload and delete (with the paywall on a 402), the recording date fix, and the first step of the Profile tab (2.9/2.10): your own profile, read-only (`1894a10`). All pushed and tested on the emulator against the test backend.
+**Done today on Android:** all of the Profile editing for 2.9/2.10, one commit each, pushed and tested on the emulator against the test backend: edit name; the "Show only my Musician Profile" switch; add/edit/remove instruments; add/edit/remove bands; add/change/remove the photo (shrunk to 1024px before upload); and last, editing the About bio and the music bio with a formatting toolbar. Also fixed: saving names failed for users without a work bio (Gson dropped the null), the Profile tab lost its scroll position after an edit, and test tags inside dialogs and menus weren't visible to Appium.
 
-**Next: Profile editing (2.9/2.10 on Android).** The remaining Profile steps, in order: edit name and bio; edit the Musician Profile (music bio, "musician only", instruments, bands); profile photo; other people's profiles (from Friends); settings.
+**Decided 2026-11-25: bios are edited with a formatting toolbar (option 3).** Android uses `compose-rich-editor` (`RichBioEditor.kt`) with the same buttons as the web's Tiptap editor: bold, italic, strikethrough, bullet and numbered lists, heading (H3), undo, redo. An unchanged bio is saved back exactly as loaded. **iPhone must match this.**
 
-**Open question for the user (asked 2026-11-24, not answered yet): how to edit bios in the app.** Bios are HTML from the web's rich-text editor. Options given: (1) plain text box, formatting from the web is lost when edited in the app; (2) plain text box, but bios with web formatting say "edit it on the website" and can't be edited in the app (recommended: quick, never loses anything); (3) a small formatting toolbar (bold, italics, lists), the most work, iOS must match. Until answered, the parts without bios can be built: names, "musician only", instruments, bands, photo.
+**Next: the rest of 2.9 on Android:** other people's profiles (`GET /api/profile/user/:handle`, opened from Friends), then settings.
 
-**iPhone still to match:** 2.2 upload and delete (and the paywall on a 402), and the Profile tab.
+**iPhone still to match:** 2.2 upload and delete (and the paywall on a 402), and the whole Profile tab including editing.
 
 **For iPhone (check while matching 2.2):** the session's recording date (`recorded_at`) comes as UTC midnight (`2026-11-24T00:00:00.000Z`); shown in local time it's a day early west of UTC. Android now formats it in UTC (`formatCalendarDate` in `Dates.kt`). iPhone probably has the same bug.
+
+**For iPhone (check while matching the Profile):** `PUT /api/profile` writes all four fields (names, bio, work bio), and a field missing from the JSON makes the update fail. Send `workBio` back as loaded, as an explicit `null` when it's null.
 
 **Test environment (fixed 2026-11-24):**
 - `breakroom_test` was missing migrations 049 (`sessions.duration_ms`) and 096 (`master_s3_key`, `master_file_size`); both are applied now, so `/api/sessions` works.
@@ -102,7 +104,7 @@ Notes:
 - **2.2 / 2.4**: both apps list the user's sessions and their bandmates' (`/api/sessions`, `/api/sessions/band-members`), play them (`/stream` with the token) and rate them 1 to 10. Android also uploads (`POST /api/sessions`, multipart: `audio`, `name`, `session_type`, `recorded_at`, `band_id`, `instrument_id`) and deletes your own sessions (`DELETE /api/sessions/:id`). Still to do: upload and delete on iPhone (2.2), comments and share links (2.4). Upload is where the paywall (1.10) first matters: the free tier allows 3 + 3 sessions, and Android shows the paywall on the 402.
 - **2.7**: both apps list rooms and direct messages, open them, load earlier messages and send text. Still to do: live updates over Socket.IO (new messages only appear on reopening), images and videos (shown as a placeholder), starting a DM from Friends, and joining or creating rooms.
 - **2.7 iOS bugs (found while matching it on Android, 2026-11-23):** `GET /rooms/:id/messages` already returns oldest first, but `ChatRoomViewModel` reverses it, so messages show newest at the top and "Load earlier" uses the wrong `before`; `POST /rooms/:id/messages` answers `{ message: {...} }` but iOS decodes the message itself, so sending reports an error even though the message was saved; and `before` isn't URL-encoded. Android follows the backend.
-- **2.9 / 2.10** (Android, started 2026-11-24): the Profile tab shows your own profile, read-only: photo, name, About, the Musician Profile (music bio, musician-only, instruments, bands) and Details. Planned next, in order: edit name and bio; edit the Musician Profile (`PUT /api/profile/musician`, `/musician/instruments`, `/musician/bands`); profile photo (`POST`/`DELETE /api/profile/photo`); other people's profiles (`GET /api/profile/user/:handle`, from Friends); settings. Test data: testadmin has a music bio, two instruments and two bands in `breakroom_test`.
+- **2.9 / 2.10** (Android, started 2026-11-24): the Profile tab shows your own profile and edits all of it: name and About bio (`PUT /api/profile`), the music bio and musician-only switch (`PUT /api/profile/musician`), instruments and bands (`/musician/instruments`, `/musician/bands`), and the photo (`POST`/`DELETE /api/profile/photo`). Bios use a formatting toolbar matching the web's. Still to do: other people's profiles (`GET /api/profile/user/:handle`, from Friends), then settings. Test data: testadmin has a music bio, two instruments and two bands in `breakroom_test`.
 - **2.8**: both apps have the list and requests (accept, decline, cancel, remove). Still to do: search for people and send a request (`/api/friends/search`, `POST /api/friends/request/:id`; the API call is already in both apps).
 
 ## Phase 3: Prosaurus music features brought into Greywire
@@ -152,6 +154,7 @@ Notes:
 
 Newest first. One line per finished step, with the commit.
 
+- 2026-11-25: 2.9/2.10 Android: Profile editing, one commit per step: names, musician-only switch, instruments, bands, photo, then the bios with a formatting toolbar. Fixes: names failed to save with a null work bio; the tab's scroll position after an edit; dialog and menu test tags for Appium. Tested on the emulator against the test backend (add, edit, remove and validation for each; photo upload from a 4000x3000 JPEG came out 1024x768; bios saved unchanged come back byte for byte).
 - 2026-11-24: 2.2 Android: upload and delete, and the paywall on a 402 (1.10). Tested on the emulator: upload as a solo take with an instrument, playback of the upload, delete, and the paywall for testadmin's 4th solo session. Also fixed the recording date showing a day early. Test environment fixed (migrations 049 and 096 on `breakroom_test`, fresh `node_modules` volume).
 - 2026-11-23: 4.4 Android: pedal illustrations on Home's cards, and the 632dp tablet width cap on the tabs, matching GreywireiPhone `1de7915`.
 - 2026-11-23: 2.2 and 2.4 (list, play, rate) Android, matching GreywireiPhone `6c44986`.
