@@ -3,6 +3,17 @@ package com.cherryblossomdev.greywire.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.semantics.Role
+import com.cherryblossomdev.greywire.ui.theme.GreywireBg
+import com.cherryblossomdev.greywire.ui.theme.GreywireSurface2
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,6 +77,11 @@ data class SettingsUiState(
     /** What the backend said after sending or resending ("Verification email sent"). */
     val altEmailMessage: String? = null,
     val altEmailError: String? = null,
+    /** The "I understand" box for the deletion request. */
+    val deletionConfirmed: Boolean = false,
+    val isRequestingDeletion: Boolean = false,
+    val deletionRequested: Boolean = false,
+    val deletionError: String? = null,
     val sessionExpired: Boolean = false
 )
 
@@ -155,6 +171,27 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
         }
     }
 
+    fun setDeletionConfirmed(confirmed: Boolean) {
+        _uiState.value = _uiState.value.copy(deletionConfirmed = confirmed)
+    }
+
+    /** Sends the deletion request; an administrator processes it, as on the web. */
+    fun requestDeletion() {
+        val state = _uiState.value
+        if (!state.deletionConfirmed || state.isRequestingDeletion) return
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isRequestingDeletion = true, deletionError = null)
+            _uiState.value = when (val result = repository.requestAccountDeletion()) {
+                is AuthResult.Success -> _uiState.value.copy(isRequestingDeletion = false, deletionRequested = true)
+                is AuthResult.Error -> _uiState.value.copy(
+                    isRequestingDeletion = false,
+                    sessionExpired = result.unauthorized,
+                    deletionError = result.message
+                )
+            }
+        }
+    }
+
     /** "Also send notices to this address" (only once it's confirmed). */
     fun setAltEmailNotify(enabled: Boolean) {
         val before = _uiState.value.altEmail ?: return
@@ -192,7 +229,13 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
 }
 
 @Composable
-fun SettingsScreen(viewModel: SettingsViewModel, onBack: () -> Unit, onSessionExpired: () -> Unit) {
+fun SettingsScreen(
+    viewModel: SettingsViewModel,
+    /** The signed-in account's handle, shown in the deletion request (null if not known). */
+    handle: String?,
+    onBack: () -> Unit,
+    onSessionExpired: () -> Unit
+) {
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(uiState.sessionExpired) {
@@ -214,6 +257,8 @@ fun SettingsScreen(viewModel: SettingsViewModel, onBack: () -> Unit, onSessionEx
             Spacer(Modifier.height(32.dp))
         }
         AlternateEmailSection(uiState, viewModel)
+        Spacer(Modifier.height(32.dp))
+        AccountDeletionSection(handle, uiState, viewModel)
         Spacer(Modifier.height(24.dp))
     }
 }
@@ -295,6 +340,91 @@ internal fun SettingSwitch(
             colors = greywireSwitchColors(),
             modifier = Modifier.testTag(testTag)
         )
+    }
+}
+
+/**
+ * Account deletion (the web's danger zone): ticking "I understand" enables
+ * the request, which an administrator then processes.
+ */
+@Composable
+private fun AccountDeletionSection(handle: String?, uiState: SettingsUiState, viewModel: SettingsViewModel) {
+    Eyebrow("Account deletion")
+    GreywireCard(modifier = Modifier.testTag("account-deletion")) {
+        Text(
+            "Requesting deletion will permanently remove your account and all associated data. " +
+                "This can't be undone. An administrator will process your request.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = GreywireMuted
+        )
+        Spacer(Modifier.height(16.dp))
+        if (uiState.deletionRequested) {
+            Text(
+                "Your deletion request has been submitted. An administrator will process it shortly.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = GreywireSignal,
+                modifier = Modifier.testTag("deletion-requested-message")
+            )
+            return@GreywireCard
+        }
+        handle?.let {
+            Text("Account: @$it", style = MonoSmallStyle, color = GreywireText)
+            Spacer(Modifier.height(12.dp))
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .toggleable(
+                    value = uiState.deletionConfirmed,
+                    enabled = !uiState.isRequestingDeletion,
+                    role = Role.Checkbox,
+                    onValueChange = viewModel::setDeletionConfirmed
+                )
+                .testTag("deletion-confirm-checkbox")
+        ) {
+            Checkbox(
+                checked = uiState.deletionConfirmed,
+                onCheckedChange = null,
+                enabled = !uiState.isRequestingDeletion,
+                colors = CheckboxDefaults.colors(
+                    checkedColor = GreywireCopper,
+                    uncheckedColor = GreywireMuted,
+                    checkmarkColor = GreywireBg
+                )
+            )
+            Spacer(Modifier.width(12.dp))
+            Text(
+                "I understand this will permanently delete my account and all associated data",
+                style = MaterialTheme.typography.bodyMedium,
+                color = GreywireText
+            )
+        }
+        Spacer(Modifier.height(16.dp))
+        Button(
+            onClick = viewModel::requestDeletion,
+            enabled = uiState.deletionConfirmed && !uiState.isRequestingDeletion,
+            shape = RoundedCornerShape(10.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.error,
+                contentColor = MaterialTheme.colorScheme.onError,
+                disabledContainerColor = GreywireSurface2,
+                disabledContentColor = GreywireMuted
+            ),
+            modifier = Modifier.fillMaxWidth().testTag("request-deletion-button")
+        ) {
+            if (uiState.isRequestingDeletion) {
+                CircularProgressIndicator(Modifier.size(18.dp), color = GreywireMuted, strokeWidth = 2.dp)
+                Spacer(Modifier.width(12.dp))
+                Text("Sending...")
+            } else {
+                Text("Request account deletion")
+            }
+        }
+        uiState.deletionError?.let {
+            Spacer(Modifier.height(12.dp))
+            ErrorText(it, Modifier.testTag("deletion-error"))
+        }
     }
 }
 

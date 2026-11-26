@@ -271,6 +271,7 @@ fun GreywireNavGraph(navController: NavHostController = rememberNavController())
                 val viewModel = remember { SettingsViewModel(deps.settingsRepository) }
                 SettingsScreen(
                     viewModel = viewModel,
+                    handle = deps.profileRepository.lastProfile?.handle,
                     onBack = { navController.popBackStack() },
                     onSessionExpired = ::performLogout
                 )

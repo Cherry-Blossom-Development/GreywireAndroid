@@ -30,6 +30,9 @@ class SettingsRepository(
     suspend fun resendAlternateEmail(): AuthResult<MessageOnlyResponse> =
         authedCall(tokenManager, "Couldn't resend the confirmation email") { api.resendAlternateEmail(it) }
 
+    suspend fun requestAccountDeletion(): AuthResult<MessageOnlyResponse> =
+        authedCall(tokenManager, "Couldn't send the deletion request. Please try again.") { api.requestAccountDeletion(it) }
+
     suspend fun setAlternateEmailNotify(enabled: Boolean): AuthResult<MessageOnlyResponse> =
         authedCall(tokenManager, "Couldn't save the setting") { api.setAlternateEmailNotify(it, AlternateEmailNotifyUpdate(enabled)) }
 }

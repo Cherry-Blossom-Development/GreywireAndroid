@@ -98,6 +98,13 @@ interface SettingsApiService {
     @POST("api/user/alternate-email/resend")
     suspend fun resendAlternateEmail(@Header("Authorization") token: String): Response<MessageOnlyResponse>
 
+    /**
+     * Asks an administrator to delete the account and all its data
+     * (409 if a request is already pending). Nothing is deleted straight away.
+     */
+    @POST("api/profile/deletion-request")
+    suspend fun requestAccountDeletion(@Header("Authorization") token: String): Response<MessageOnlyResponse>
+
     /** Turning it on needs a confirmed address (400 otherwise). */
     @PUT("api/user/alternate-email/notify")
     suspend fun setAlternateEmailNotify(
