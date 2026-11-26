@@ -15,25 +15,28 @@ Small loose ends (polish, dev notes) stay in `TODO.md`. Update this file as each
 
 **Status key:** `done` · `wip` · `todo` · `n/a` (nothing needed in that project) · `?` (not yet checked)
 
-## Where we left off (updated 2026-11-25)
+## Where we left off (updated 2026-11-26)
 
-**Done today on Android:** all of the Profile editing for 2.9/2.10, one commit each, pushed and tested on the emulator against the test backend: edit name; the "Show only my Musician Profile" switch; add/edit/remove instruments; add/edit/remove bands; add/change/remove the photo (shrunk to 1024px before upload); and last, editing the About bio and the music bio with a formatting toolbar. Also fixed: saving names failed for users without a work bio (Gson dropped the null), the Profile tab lost its scroll position after an edit, and test tags inside dialogs and menus weren't visible to Appium.
+**Done today on Android:** 2.9 is finished. Other members' profiles open from the Friends tab (read only), and Profile has Settings with notifications, the alternate email and the account deletion request, matching the web. One commit per section, pushed and tested on the emulator.
 
-**Decided 2026-11-25: bios are edited with a formatting toolbar (option 3).** Android uses `compose-rich-editor` (`RichBioEditor.kt`) with the same buttons as the web's Tiptap editor: bold, italic, strikethrough, bullet and numbered lists, heading (H3), undo, redo. An unchanged bio is saved back exactly as loaded. **iPhone must match this.**
+**Backend fix today (Breakroom `5b941aa`, pushed, not deployed):** `PUT /api/user/notification-settings` and `PUT /api/user/audio-defaults` were caught by the admin route `PUT /api/user/:id` and refused with 403 for everyone except admins, on the web too. The `/:id` routes now skip ids that aren't numbers. **Production needs a backend deploy** for notification settings to save there.
 
-**Next: the rest of 2.9 on Android:** other people's profiles (`GET /api/profile/user/:handle`, opened from Friends), then settings.
+**Next on Android (suggested):** 2.8 friend search and sending requests (the API call is already in both apps), then 2.7 live chat over Socket.IO, or 2.5 bands. Also open: Block and Flag on other members' profiles (`TODO.md`).
 
-**iPhone still to match:** 2.2 upload and delete (and the paywall on a 402), and the whole Profile tab including editing.
+**iPhone still to match:** 2.2 upload and delete (and the paywall on a 402), and all of 2.9/2.10: the Profile tab with editing, other members' profiles from Friends, and Settings.
 
 **For iPhone (check while matching 2.2):** the session's recording date (`recorded_at`) comes as UTC midnight (`2026-11-24T00:00:00.000Z`); shown in local time it's a day early west of UTC. Android now formats it in UTC (`formatCalendarDate` in `Dates.kt`). iPhone probably has the same bug.
 
 **For iPhone (check while matching the Profile):** `PUT /api/profile` writes all four fields (names, bio, work bio), and a field missing from the JSON makes the update fail. Send `workBio` back as loaded, as an explicit `null` when it's null.
+
+**For iPhone (check while matching Settings):** `GET /api/user/notification-settings` sends `true`/`false` when there's no row yet but `1`/`0` once one is saved, and `/api/user/alternate-email` always sends `0`/`1`, so decode these booleans from numbers too (Android's `LenientBooleanAdapter`).
 
 **Test environment (fixed 2026-11-24):**
 - `breakroom_test` was missing migrations 049 (`sessions.duration_ms`) and 096 (`master_s3_key`, `master_file_size`); both are applied now, so `/api/sessions` works.
 - The test backend lacked `@tus/server` because the `breakroom_backend_test_node_modules` volume kept old packages even after `--build`. Removing the volume and rebuilding fixed it. If a new backend package is missing again: `docker volume rm breakroom_backend_test_node_modules`, then rebuild.
 - To start it: start Docker Desktop, then from `../Breakroom` run `docker compose --env-file .env.test -f docker-compose.test.yml up -d --build backend-test`; start the `Pixel_9_API_35` emulator.
 - The test backend stores uploads in the real S3 bucket (`prosaurus-breakroom-uploads`), so delete test sessions afterwards (deleting removes the S3 files).
+- `testadmin` has a pending friend request to `testuser` (sent 2026-11-26), handy for opening a profile from Friends.
 - Accounts: `testuser` holds test pedal `00000000000000A1` (member, no limits); `testadmin` is a Greywire user without a pedal (free tier: 3 band + 3 solo sessions), handy for testing the paywall. Test account `gwtest073722` exists. `npx ts-node database/setup.ts` in BreakTest resets everything.
 
 **Working style agreed:** small commits, one change each; push after each finished step; update this file as steps finish.
@@ -97,14 +100,14 @@ Web routes: `/chat`, `/sessions`, `/friends`, `/user/:handle`, `/profile`. The P
 | 2.6 Band setlists (`/bands/:id/setlists`) | done | ? | todo | todo |
 | 2.7 Chat: rooms and direct messages (Socket.IO) | done | done | wip | wip |
 | 2.8 Friends: list, requests, search (members only) | done | done | wip | wip |
-| 2.9 Profile: own profile, settings, other members' profiles | done | done | wip | todo |
-| 2.10 Musician profile (bio, "musician only"; Greywire only) | done | done | wip | todo |
+| 2.9 Profile: own profile, settings, other members' profiles | done | done | done | todo |
+| 2.10 Musician profile (bio, "musician only"; Greywire only) | done | done | done | todo |
 
 Notes:
 - **2.2 / 2.4**: both apps list the user's sessions and their bandmates' (`/api/sessions`, `/api/sessions/band-members`), play them (`/stream` with the token) and rate them 1 to 10. Android also uploads (`POST /api/sessions`, multipart: `audio`, `name`, `session_type`, `recorded_at`, `band_id`, `instrument_id`) and deletes your own sessions (`DELETE /api/sessions/:id`). Still to do: upload and delete on iPhone (2.2), comments and share links (2.4). Upload is where the paywall (1.10) first matters: the free tier allows 3 + 3 sessions, and Android shows the paywall on the 402.
 - **2.7**: both apps list rooms and direct messages, open them, load earlier messages and send text. Still to do: live updates over Socket.IO (new messages only appear on reopening), images and videos (shown as a placeholder), starting a DM from Friends, and joining or creating rooms.
 - **2.7 iOS bugs (found while matching it on Android, 2026-11-23):** `GET /rooms/:id/messages` already returns oldest first, but `ChatRoomViewModel` reverses it, so messages show newest at the top and "Load earlier" uses the wrong `before`; `POST /rooms/:id/messages` answers `{ message: {...} }` but iOS decodes the message itself, so sending reports an error even though the message was saved; and `before` isn't URL-encoded. Android follows the backend.
-- **2.9 / 2.10** (Android, started 2026-11-24): the Profile tab shows your own profile and edits all of it: name and About bio (`PUT /api/profile`), the music bio and musician-only switch (`PUT /api/profile/musician`), instruments and bands (`/musician/instruments`, `/musician/bands`), and the photo (`POST`/`DELETE /api/profile/photo`). Bios use a formatting toolbar matching the web's. Still to do: other people's profiles (`GET /api/profile/user/:handle`, from Friends), then settings. Test data: testadmin has a music bio, two instruments and two bands in `breakroom_test`.
+- **2.9 / 2.10** (Android, started 2026-11-24): the Profile tab shows your own profile and edits all of it: name and About bio (`PUT /api/profile`), the music bio and musician-only switch (`PUT /api/profile/musician`), instruments and bands (`/musician/instruments`, `/musician/bands`), and the photo (`POST`/`DELETE /api/profile/photo`). Bios use a formatting toolbar matching the web's. Other members' profiles (`GET /api/profile/user/:handle`) open read only from any person on the Friends tab, with About hidden for musician-only profiles. Settings (from the Profile tab) has the web's three sections: notifications (`/api/user/notification-settings`), the alternate email (`/api/user/alternate-email`) and the account deletion request (`POST /api/profile/deletion-request`). Done on Android 2026-11-26. Not on the app's other-profile screen yet: the web's Block and Flag buttons (see `TODO.md`). Test data: testadmin has a music bio, two instruments and two bands in `breakroom_test`.
 - **2.8**: both apps have the list and requests (accept, decline, cancel, remove). Still to do: search for people and send a request (`/api/friends/search`, `POST /api/friends/request/:id`; the API call is already in both apps).
 
 ## Phase 3: Prosaurus music features brought into Greywire
@@ -154,6 +157,7 @@ Notes:
 
 Newest first. One line per finished step, with the commit.
 
+- 2026-11-26: 2.9 Android finished: other members' profiles from Friends (`1b1c406`); Settings with notifications (`e8599c4`), the alternate email (`6fed6b8`) and the account deletion request (`0749ec2`). Backend fix (Breakroom `5b941aa`): `PUT /api/user/:id` caught `PUT /notification-settings` and `/audio-defaults` and refused them for non-admins, so those settings couldn't be saved on the web either. Tested on the emulator against the test backend: a profile opened from a sent request and Back; each notification switch saved and reloaded; an alternate email set, confirmed (in the database, as the test DB has no confirmation email template), its notices switch, and removed; a deletion request sent (then deleted from `breakroom_test`).
 - 2026-11-25: 2.9/2.10 Android: Profile editing, one commit per step: names, musician-only switch, instruments, bands, photo, then the bios with a formatting toolbar. Fixes: names failed to save with a null work bio; the tab's scroll position after an edit; dialog and menu test tags for Appium. Tested on the emulator against the test backend (add, edit, remove and validation for each; photo upload from a 4000x3000 JPEG came out 1024x768; bios saved unchanged come back byte for byte).
 - 2026-11-24: 2.2 Android: upload and delete, and the paywall on a 402 (1.10). Tested on the emulator: upload as a solo take with an instrument, playback of the upload, delete, and the paywall for testadmin's 4th solo session. Also fixed the recording date showing a day early. Test environment fixed (migrations 049 and 096 on `breakroom_test`, fresh `node_modules` volume).
 - 2026-11-23: 4.4 Android: pedal illustrations on Home's cards, and the 632dp tablet width cap on the tabs, matching GreywireiPhone `1de7915`.

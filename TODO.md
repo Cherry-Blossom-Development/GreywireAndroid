@@ -12,6 +12,10 @@ Loose ends to address later. **Features are planned in `ROADMAP.md`**, not here.
 - **Play Store listing**: text is drafted in `PLAY_STORE_LISTING.md` (from iOS's `APP_STORE_LISTING.md`). Still needed: the 512px icon, feature graphic, screenshots and the Data Safety form.
 - **Version bumps**: `versionCode` / `versionName` in `app/build.gradle.kts` (currently 1 / 0.1.0).
 
+## Moderation
+
+- **Block and Flag on other members' profiles.** The web's profile page (`PublicProfilePage.vue`) has "Block User" (`POST /api/friends/block/:id`) and "Flag Profile" (the flag dialog). The app's `UserProfileScreen` doesn't have them yet (neither app). Play and the App Store expect a way to block and report people in apps with user content, so this is needed before release.
+
 ## Polish
 
 - **Splash icon size.** On Android 12+ the splash icon nearly fills its circle. The adaptive foreground (`ic_launcher_foreground.xml`, scale 1.2) could be a bit smaller.
