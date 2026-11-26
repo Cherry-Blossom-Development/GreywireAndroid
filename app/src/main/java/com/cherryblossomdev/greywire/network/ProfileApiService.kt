@@ -148,6 +148,13 @@ interface ProfileApiService {
     @GET("api/profile")
     suspend fun getProfile(@Header("Authorization") token: String): Response<ProfileResponse>
 
+    /**
+     * Someone else's profile. On Greywire only Greywire users have one (404
+     * otherwise), and a musician-only profile comes without the bio.
+     */
+    @GET("api/profile/user/{handle}")
+    suspend fun getUserProfile(@Header("Authorization") token: String, @Path("handle") handle: String): Response<ProfileResponse>
+
     /** Names and bios: a [ProfileUpdate] as JSON with its nulls written out (see ProfileRepository). */
     @PUT("api/profile")
     suspend fun updateProfile(@Header("Authorization") token: String, @Body body: RequestBody): Response<MessageOnlyResponse>

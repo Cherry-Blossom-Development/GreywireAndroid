@@ -57,6 +57,8 @@ import com.cherryblossomdev.greywire.ui.screens.PaywallViewModel
 import com.cherryblossomdev.greywire.ui.screens.PrivacyPolicyScreen
 import com.cherryblossomdev.greywire.ui.screens.SignupScreen
 import com.cherryblossomdev.greywire.ui.screens.SignupViewModel
+import com.cherryblossomdev.greywire.ui.screens.UserProfileScreen
+import com.cherryblossomdev.greywire.ui.screens.UserProfileViewModel
 import kotlinx.coroutines.launch
 
 sealed class Screen(val route: String) {
@@ -81,6 +83,10 @@ sealed class Screen(val route: String) {
     // A user_band_history row to edit; no id adds one
     object ProfileBand : Screen("profile-band?id={id}") {
         fun route(id: Int?) = if (id == null) "profile-band" else "profile-band?id=$id"
+    }
+    // Another member's profile (read only), opened from Friends
+    object UserProfile : Screen("user/{handle}") {
+        fun route(handle: String) = "user/${Uri.encode(handle)}"
     }
     object Legal : Screen("legal")
     object Eula : Screen("eula")
@@ -228,7 +234,21 @@ fun GreywireNavGraph(navController: NavHostController = rememberNavController())
             }
             composable(Screen.Friends.route) {
                 val viewModel = remember { FriendsViewModel(deps.friendsRepository) }
-                FriendsScreen(viewModel = viewModel, onSessionExpired = ::performLogout)
+                FriendsScreen(
+                    viewModel = viewModel,
+                    onOpenProfile = { navController.navigate(Screen.UserProfile.route(it)) },
+                    onSessionExpired = ::performLogout
+                )
+            }
+            composable(Screen.UserProfile.route) { entry ->
+                val handle = entry.arguments?.getString("handle").orEmpty()
+                val viewModel = remember { UserProfileViewModel(deps.profileRepository, handle) }
+                UserProfileScreen(
+                    viewModel = viewModel,
+                    handle = handle,
+                    onBack = { navController.popBackStack() },
+                    onSessionExpired = ::performLogout
+                )
             }
             composable(Screen.Profile.route) {
                 val viewModel = remember { ProfileViewModel(deps.profileRepository) }

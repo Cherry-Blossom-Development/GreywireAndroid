@@ -344,7 +344,7 @@ private fun PhotoButton(hasPhoto: Boolean, isSaving: Boolean, onPick: (Uri) -> U
 
 /** Photo, name, @handle, member since and friend count (the web's `.profile-header`). */
 @Composable
-private fun ProfileHeader(profile: Profile) {
+internal fun ProfileHeader(profile: Profile) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.testTag("profile-header")) {
         ProfileAvatar(profile.photoPath, profile.displayName, size = 80.dp)
         Spacer(Modifier.width(16.dp))
@@ -479,14 +479,20 @@ private fun MusicianSections(
 @Composable
 private fun InstrumentRow(instrument: ProfileInstrument, onClick: () -> Unit) {
     EditableRow(onClick = onClick, editLabel = "Edit ${instrument.name}", testTag = "profile-instrument-${instrument.id}") {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(instrument.name, style = MaterialTheme.typography.titleMedium, color = GreywireText)
-            if (instrument.isPrimary) StatusPill("Main")
-        }
-        instrument.details.takeIf { it.isNotEmpty() }?.let {
-            Spacer(Modifier.height(2.dp))
-            Text(it, style = MaterialTheme.typography.bodySmall, color = GreywireMuted)
-        }
+        InstrumentInfo(instrument)
+    }
+}
+
+/** An instrument's name, "Main" pill and details (shared with other members' profiles). */
+@Composable
+internal fun InstrumentInfo(instrument: ProfileInstrument) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(instrument.name, style = MaterialTheme.typography.titleMedium, color = GreywireText)
+        if (instrument.isPrimary) StatusPill("Main")
+    }
+    instrument.details.takeIf { it.isNotEmpty() }?.let {
+        Spacer(Modifier.height(2.dp))
+        Text(it, style = MaterialTheme.typography.bodySmall, color = GreywireMuted)
     }
 }
 
@@ -509,12 +515,18 @@ private fun EditableRow(onClick: () -> Unit, editLabel: String, testTag: String,
 @Composable
 private fun BandRow(band: ProfileBand, onClick: () -> Unit) {
     EditableRow(onClick = onClick, editLabel = "Edit ${band.bandName}", testTag = "profile-band-${band.id}") {
-        Text(band.bandName, style = MaterialTheme.typography.titleMedium, color = GreywireText)
-        val details = listOfNotNull(band.role, band.years.takeIf { it.isNotEmpty() }).joinToString(" · ")
-        if (details.isNotEmpty()) {
-            Spacer(Modifier.height(2.dp))
-            Text(details, style = MaterialTheme.typography.bodySmall, color = GreywireMuted)
-        }
+        BandInfo(band)
+    }
+}
+
+/** A band's name, role and years (shared with other members' profiles). */
+@Composable
+internal fun BandInfo(band: ProfileBand) {
+    Text(band.bandName, style = MaterialTheme.typography.titleMedium, color = GreywireText)
+    val details = listOfNotNull(band.role, band.years.takeIf { it.isNotEmpty() }).joinToString(" · ")
+    if (details.isNotEmpty()) {
+        Spacer(Modifier.height(2.dp))
+        Text(details, style = MaterialTheme.typography.bodySmall, color = GreywireMuted)
     }
 }
 
@@ -531,17 +543,17 @@ private fun DetailsSection(profile: Profile) {
 }
 
 @Composable
-private fun BioText(html: String?, empty: String) {
+internal fun BioText(html: String?, empty: String) {
     if (isBlankHtml(html)) EmptyLine(empty) else HtmlText(html!!)
 }
 
 @Composable
-private fun EmptyLine(text: String) {
+internal fun EmptyLine(text: String) {
     Text(text, style = MaterialTheme.typography.bodyMedium, color = GreywireMuted)
 }
 
 @Composable
-private fun ListDivider() {
+internal fun ListDivider() {
     HorizontalDivider(color = GreywireLine, thickness = 1.dp, modifier = Modifier.padding(vertical = 12.dp))
 }
 

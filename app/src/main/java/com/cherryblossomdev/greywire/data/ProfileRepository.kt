@@ -35,6 +35,10 @@ class ProfileRepository(
         authedCall(tokenManager, "Couldn't load your profile") { api.getProfile(it) }
             .also { if (it is AuthResult.Success) lastProfile = it.data.user }
 
+    /** Another member's profile, by handle. */
+    suspend fun getUserProfile(handle: String): AuthResult<ProfileResponse> =
+        authedCall(tokenManager, "Couldn't load this profile") { api.getUserProfile(it, handle) }
+
     /** On sign out, so the next account doesn't briefly see this one's profile. */
     fun clearLastProfile() {
         lastProfile = null

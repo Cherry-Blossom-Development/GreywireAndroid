@@ -12,6 +12,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -156,7 +159,12 @@ class FriendsViewModel(private val repository: FriendsRepository) : ViewModel() 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FriendsScreen(viewModel: FriendsViewModel, onSessionExpired: () -> Unit) {
+fun FriendsScreen(
+    viewModel: FriendsViewModel,
+    /** Opens a person's profile, by handle. */
+    onOpenProfile: (String) -> Unit,
+    onSessionExpired: () -> Unit
+) {
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit) { viewModel.load() }
@@ -195,9 +203,10 @@ fun FriendsScreen(viewModel: FriendsViewModel, onSessionExpired: () -> Unit) {
                 ) {
                     uiState.errorMessage?.let { ErrorText(it, Modifier.testTag("friends-error")) }
                     when (uiState.section) {
-                        FriendsSection.Friends -> FriendsList(uiState.friends, viewModel::remove)
+                        FriendsSection.Friends -> FriendsList(uiState.friends, onOpenProfile, viewModel::remove)
                         FriendsSection.Requests -> RequestsList(
                             uiState.requests, uiState.sent,
+                            onOpenProfile = onOpenProfile,
                             onAccept = viewModel::accept,
                             onDecline = viewModel::decline,
                             onCancel = viewModel::cancel
@@ -211,7 +220,7 @@ fun FriendsScreen(viewModel: FriendsViewModel, onSessionExpired: () -> Unit) {
 }
 
 @Composable
-private fun FriendsList(friends: List<FriendUser>, onRemove: (FriendUser) -> Unit) {
+private fun FriendsList(friends: List<FriendUser>, onOpenProfile: (String) -> Unit, onRemove: (FriendUser) -> Unit) {
     if (friends.isEmpty()) {
         EmptyStateCard(
             "No friends yet",
@@ -223,7 +232,7 @@ private fun FriendsList(friends: List<FriendUser>, onRemove: (FriendUser) -> Uni
     Spacer(Modifier.height(2.dp))
     friends.forEach { friend ->
         var confirmRemove by remember { mutableStateOf(false) }
-        PersonCard(friend, online = friend.isOnline, testTag = "friend-${friend.id}") {
+        PersonCard(friend, online = friend.isOnline, testTag = "friend-${friend.id}", onClick = { onOpenProfile(friend.handle) }) {
             IconButton(onClick = { confirmRemove = true }, modifier = Modifier.testTag("remove-friend-${friend.id}")) {
                 Icon(Icons.Filled.Close, contentDescription = "Remove ${friend.handle}", tint = GreywireMuted, modifier = Modifier.size(16.dp))
             }
@@ -246,6 +255,7 @@ private fun FriendsList(friends: List<FriendUser>, onRemove: (FriendUser) -> Uni
 private fun RequestsList(
     requests: List<FriendUser>,
     sent: List<FriendUser>,
+    onOpenProfile: (String) -> Unit,
     onAccept: (FriendUser) -> Unit,
     onDecline: (FriendUser) -> Unit,
     onCancel: (FriendUser) -> Unit
@@ -258,7 +268,7 @@ private fun RequestsList(
         Eyebrow("Incoming")
         Spacer(Modifier.height(2.dp))
         requests.forEach { request ->
-            PersonCard(request, testTag = "friend-request-${request.id}") {
+            PersonCard(request, testTag = "friend-request-${request.id}", onClick = { onOpenProfile(request.handle) }) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     RoundIconButton(
                         icon = Icons.Filled.Close,
@@ -287,7 +297,7 @@ private fun RequestsList(
         Spacer(Modifier.height(2.dp))
         sent.forEach { request ->
             var confirmCancel by remember { mutableStateOf(false) }
-            PersonCard(request, testTag = "sent-request-${request.id}") {
+            PersonCard(request, testTag = "sent-request-${request.id}", onClick = { onOpenProfile(request.handle) }) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     StatusPill("Pending")
                     IconButton(onClick = { confirmCancel = true }, modifier = Modifier.testTag("cancel-request-${request.id}")) {
@@ -310,15 +320,24 @@ private fun RequestsList(
     }
 }
 
-/** A card with the person's avatar, name and @handle, and [actions] on the right. */
+/**
+ * A card with the person's avatar, name and @handle, and [actions] on the
+ * right. Tapping the card opens their profile.
+ */
 @Composable
 private fun PersonCard(
     person: FriendUser,
     online: Boolean = false,
     testTag: String,
+    onClick: () -> Unit,
     actions: @Composable () -> Unit
 ) {
-    GreywireCard(modifier = Modifier.testTag(testTag)) {
+    GreywireCard(
+        modifier = Modifier
+            .clip(RoundedCornerShape(10.dp))
+            .clickable(onClickLabel = "View profile", onClick = onClick)
+            .testTag(testTag)
+    ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             InitialAvatar(person.handle, online = online)
             Spacer(Modifier.width(12.dp))
