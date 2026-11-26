@@ -8,6 +8,7 @@ import com.cherryblossomdev.greywire.data.FriendsRepository
 import com.cherryblossomdev.greywire.data.GreywireRepository
 import com.cherryblossomdev.greywire.data.ProfileRepository
 import com.cherryblossomdev.greywire.data.SessionsRepository
+import com.cherryblossomdev.greywire.data.SettingsRepository
 import com.cherryblossomdev.greywire.data.TokenManager
 import com.cherryblossomdev.greywire.network.RetrofitClient
 
@@ -26,5 +27,6 @@ class AppContainer(context: Context) {
     val chatRepository by lazy { ChatRepository(RetrofitClient.chatApiService, tokenManager) }
     val sessionsRepository by lazy { SessionsRepository(RetrofitClient.sessionsApiService, RetrofitClient.sessionsUploadApiService, tokenManager) }
     val friendsRepository by lazy { FriendsRepository(RetrofitClient.friendsApiService, tokenManager) }
+    val settingsRepository by lazy { SettingsRepository(RetrofitClient.settingsApiService, tokenManager) }
     val profileRepository by lazy { ProfileRepository(RetrofitClient.profileApiService, RetrofitClient.profileUploadApiService, tokenManager) }
 }

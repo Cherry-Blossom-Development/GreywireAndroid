@@ -202,6 +202,7 @@ fun ProfileScreen(
     onEditMusicBio: () -> Unit,
     onEditInstrument: (Int?) -> Unit,
     onEditBand: (Int?) -> Unit,
+    onOpenSettings: () -> Unit,
     onLogout: () -> Unit,
     onSessionExpired: () -> Unit
 ) {
@@ -269,6 +270,10 @@ fun ProfileScreen(
                     DetailsSection(profile)
                 }
                 Spacer(Modifier.height(32.dp))
+                GreywireGhostButton(onClick = onOpenSettings, modifier = Modifier.fillMaxWidth().testTag("settings-button")) {
+                    Text("Settings", style = MaterialTheme.typography.labelMedium)
+                }
+                Spacer(Modifier.height(12.dp))
                 GreywireGhostButton(onClick = onLogout, modifier = Modifier.fillMaxWidth().testTag("logout-button")) {
                     Text("Sign out", style = MaterialTheme.typography.labelMedium)
                 }

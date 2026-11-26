@@ -101,6 +101,7 @@ object RetrofitClient {
     val sessionsApiService: SessionsApiService = retrofit.create(SessionsApiService::class.java)
 
     val profileApiService: ProfileApiService = retrofit.create(ProfileApiService::class.java)
+    val settingsApiService: SettingsApiService = retrofit.create(SettingsApiService::class.java)
 
     // Session uploads: sending up to 100 MB, then the backend transcodes the
     // recording before it answers, which can take well over 30 seconds.

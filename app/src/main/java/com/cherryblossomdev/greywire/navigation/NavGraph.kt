@@ -55,6 +55,8 @@ import com.cherryblossomdev.greywire.ui.screens.LoginViewModel
 import com.cherryblossomdev.greywire.ui.screens.PaywallScreen
 import com.cherryblossomdev.greywire.ui.screens.PaywallViewModel
 import com.cherryblossomdev.greywire.ui.screens.PrivacyPolicyScreen
+import com.cherryblossomdev.greywire.ui.screens.SettingsScreen
+import com.cherryblossomdev.greywire.ui.screens.SettingsViewModel
 import com.cherryblossomdev.greywire.ui.screens.SignupScreen
 import com.cherryblossomdev.greywire.ui.screens.SignupViewModel
 import com.cherryblossomdev.greywire.ui.screens.UserProfileScreen
@@ -88,6 +90,7 @@ sealed class Screen(val route: String) {
     object UserProfile : Screen("user/{handle}") {
         fun route(handle: String) = "user/${Uri.encode(handle)}"
     }
+    object Settings : Screen("settings")
     object Legal : Screen("legal")
     object Eula : Screen("eula")
     object PrivacyPolicy : Screen("privacy-policy")
@@ -258,7 +261,17 @@ fun GreywireNavGraph(navController: NavHostController = rememberNavController())
                     onEditMusicBio = { navController.navigate(Screen.ProfileMusicBio.route) },
                     onEditInstrument = { navController.navigate(Screen.ProfileInstrument.route(it)) },
                     onEditBand = { navController.navigate(Screen.ProfileBand.route(it)) },
+                    onOpenSettings = { navController.navigate(Screen.Settings.route) },
                     onLogout = ::performLogout,
+                    onSessionExpired = ::performLogout
+                )
+            }
+
+            composable(Screen.Settings.route) {
+                val viewModel = remember { SettingsViewModel(deps.settingsRepository) }
+                SettingsScreen(
+                    viewModel = viewModel,
+                    onBack = { navController.popBackStack() },
                     onSessionExpired = ::performLogout
                 )
             }
