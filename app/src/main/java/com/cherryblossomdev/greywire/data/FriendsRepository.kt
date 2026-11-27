@@ -1,5 +1,6 @@
 package com.cherryblossomdev.greywire.data
 
+import com.cherryblossomdev.greywire.network.FindUsersResponse
 import com.cherryblossomdev.greywire.network.FriendRequestsResponse
 import com.cherryblossomdev.greywire.network.FriendsApiService
 import com.cherryblossomdev.greywire.network.FriendsListResponse
@@ -18,6 +19,9 @@ class FriendsRepository(
 
     suspend fun getSent(): AuthResult<SentRequestsResponse> =
         authedCall(tokenManager, "Couldn't load sent requests") { api.getSent(it) }
+
+    suspend fun find(query: String): AuthResult<FindUsersResponse> =
+        authedCall(tokenManager, "Couldn't search for people") { api.find(it, query) }
 
     suspend fun sendRequest(userId: Int): AuthResult<MessageResponse> =
         authedCall(tokenManager, "Couldn't send the request") { api.sendRequest(it, userId) }

@@ -7,6 +7,7 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 // Friends endpoints (Breakroom/backend/routes/friends.js). With X-Site: greywire
 // the lists only include Greywire users (used Greywire, or a member).
@@ -35,6 +36,8 @@ data class FriendRequestsResponse(val requests: List<FriendUser> = emptyList())
 
 data class SentRequestsResponse(val sent: List<FriendUser> = emptyList())
 
+data class FindUsersResponse(val users: List<FriendUser> = emptyList())
+
 data class MessageResponse(val message: String? = null)
 
 interface FriendsApiService {
@@ -47,6 +50,13 @@ interface FriendsApiService {
 
     @GET("api/friends/sent")
     suspend fun getSent(@Header("Authorization") token: String): Response<SentRequestsResponse>
+
+    /**
+     * People to add: matches handle or name, leaving out yourself and anyone
+     * you're already connected to (friends, requests, blocks). At least 2 characters.
+     */
+    @GET("api/friends/find")
+    suspend fun find(@Header("Authorization") token: String, @Query("q") query: String): Response<FindUsersResponse>
 
     @POST("api/friends/request/{userId}")
     suspend fun sendRequest(@Header("Authorization") token: String, @Path("userId") userId: Int): Response<MessageResponse>

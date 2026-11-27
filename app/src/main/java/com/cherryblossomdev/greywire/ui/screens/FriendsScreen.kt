@@ -19,6 +19,17 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import com.cherryblossomdev.greywire.ui.components.GreywireGhostButton
+import com.cherryblossomdev.greywire.ui.components.greywireTextFieldColors
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -63,16 +74,21 @@ import com.cherryblossomdev.greywire.ui.theme.GreywireSurface
 import com.cherryblossomdev.greywire.ui.theme.GreywireSurface2
 import com.cherryblossomdev.greywire.ui.theme.GreywireText
 import com.cherryblossomdev.greywire.ui.theme.MonoSmallStyle
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 // The Friends tab (roadmap 2.8): friends with online status, incoming
-// requests (accept or decline) and sent requests (cancel). Matches iOS's
-// FriendsView. Searching for people to add is still to come.
+// requests (accept or decline), sent requests (cancel), and Find, which
+// searches for people to add (GET /api/friends/find) and sends requests.
 
-enum class FriendsSection(val label: String) { Friends("Friends"), Requests("Requests") }
+enum class FriendsSection(val label: String) { Friends("Friends"), Requests("Requests"), Find("Find") }
+
+/** The shortest search the backend accepts. */
+private const val MIN_FIND_LENGTH = 2
 
 data class FriendsUiState(
     val friends: List<FriendUser> = emptyList(),
@@ -82,7 +98,14 @@ data class FriendsUiState(
     val isLoading: Boolean = false,
     val hasLoaded: Boolean = false,
     val errorMessage: String? = null,
-    val sessionExpired: Boolean = false
+    val sessionExpired: Boolean = false,
+    /** Find: what's typed, and the results for [foundQuery] (null before any search). */
+    val findQuery: String = "",
+    val foundQuery: String? = null,
+    val found: List<FriendUser> = emptyList(),
+    val isSearching: Boolean = false,
+    /** Find: people whose request is being sent. */
+    val sending: Set<Int> = emptySet()
 )
 
 class FriendsViewModel(private val repository: FriendsRepository) : ViewModel() {
@@ -90,8 +113,61 @@ class FriendsViewModel(private val repository: FriendsRepository) : ViewModel() 
     private val _uiState = MutableStateFlow(FriendsUiState())
     val uiState: StateFlow<FriendsUiState> = _uiState
 
+    private var searchJob: Job? = null
+
     fun selectSection(section: FriendsSection) {
         _uiState.value = _uiState.value.copy(section = section)
+    }
+
+    /** Searches as the user types, after a short pause. */
+    fun updateFindQuery(query: String) {
+        _uiState.value = _uiState.value.copy(findQuery = query)
+        searchJob?.cancel()
+        val trimmed = query.trim()
+        if (trimmed.length < MIN_FIND_LENGTH) {
+            _uiState.value = _uiState.value.copy(found = emptyList(), foundQuery = null, isSearching = false)
+            return
+        }
+        searchJob = viewModelScope.launch {
+            delay(400)
+            search(trimmed)
+        }
+    }
+
+    private suspend fun search(query: String) {
+        _uiState.value = _uiState.value.copy(isSearching = true, errorMessage = null)
+        when (val result = repository.find(query)) {
+            is AuthResult.Success -> _uiState.value = _uiState.value.copy(
+                found = result.data.users,
+                foundQuery = query,
+                isSearching = false
+            )
+            is AuthResult.Error -> _uiState.value = if (result.unauthorized) {
+                _uiState.value.copy(isSearching = false, sessionExpired = true)
+            } else {
+                _uiState.value.copy(isSearching = false, errorMessage = result.message)
+            }
+        }
+    }
+
+    fun sendRequest(person: FriendUser) {
+        if (person.id in _uiState.value.sending) return
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(errorMessage = null, sending = _uiState.value.sending + person.id)
+            val result = repository.sendRequest(person.id)
+            val state = _uiState.value.copy(sending = _uiState.value.sending - person.id)
+            _uiState.value = when (result) {
+                is AuthResult.Success -> state.copy(
+                    found = state.found.filterNot { it.id == person.id },
+                    sent = listOf(person) + state.sent.filterNot { it.id == person.id }
+                )
+                is AuthResult.Error -> if (result.unauthorized) {
+                    state.copy(sessionExpired = true)
+                } else {
+                    state.copy(errorMessage = result.message)
+                }
+            }
+        }
     }
 
     fun load() {
@@ -179,7 +255,8 @@ fun FriendsScreen(
             GreywireSectionPicker(
                 options = listOf(
                     SectionOption(FriendsSection.Friends, "Friends", testTag = "friends-section-friends"),
-                    SectionOption(FriendsSection.Requests, "Requests", badge = uiState.requests.size, testTag = "friends-section-requests")
+                    SectionOption(FriendsSection.Requests, "Requests", badge = uiState.requests.size, testTag = "friends-section-requests"),
+                    SectionOption(FriendsSection.Find, "Find", testTag = "friends-section-find")
                 ),
                 selected = uiState.section,
                 onSelect = viewModel::selectSection
@@ -210,6 +287,12 @@ fun FriendsScreen(
                             onAccept = viewModel::accept,
                             onDecline = viewModel::decline,
                             onCancel = viewModel::cancel
+                        )
+                        FriendsSection.Find -> FindPeople(
+                            uiState,
+                            onQueryChange = viewModel::updateFindQuery,
+                            onOpenProfile = onOpenProfile,
+                            onAdd = viewModel::sendRequest
                         )
                     }
                     Spacer(Modifier.height(8.dp))
@@ -316,6 +399,73 @@ private fun RequestsList(
                 )
             }
             Spacer(Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+private fun FindPeople(
+    state: FriendsUiState,
+    onQueryChange: (String) -> Unit,
+    onOpenProfile: (String) -> Unit,
+    onAdd: (FriendUser) -> Unit
+) {
+    OutlinedTextField(
+        value = state.findQuery,
+        onValueChange = onQueryChange,
+        placeholder = { Text("Search by username or name") },
+        leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = GreywireMuted) },
+        trailingIcon = if (state.findQuery.isNotEmpty()) {
+            {
+                IconButton(onClick = { onQueryChange("") }, modifier = Modifier.testTag("find-clear-button")) {
+                    Icon(Icons.Filled.Close, contentDescription = "Clear search", tint = GreywireMuted)
+                }
+            }
+        } else null,
+        singleLine = true,
+        shape = RoundedCornerShape(10.dp),
+        colors = greywireTextFieldColors(),
+        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None, imeAction = ImeAction.Search),
+        modifier = Modifier.fillMaxWidth().testTag("find-input")
+    )
+    Spacer(Modifier.height(16.dp))
+
+    val query = state.findQuery.trim()
+    when {
+        query.length < MIN_FIND_LENGTH -> EmptyStateCard(
+            "Find musicians",
+            "Search for other Greywire musicians by username or name, then send them a friend request."
+        )
+        state.isSearching && state.foundQuery != query -> Box(
+            modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(modifier = Modifier.size(28.dp), color = GreywireCopper, strokeWidth = 2.dp)
+        }
+        state.foundQuery == null -> Unit
+        state.found.isEmpty() -> EmptyStateCard(
+            "No one found",
+            "No Greywire musicians you aren't already connected to match \"${state.foundQuery}\".",
+            modifier = Modifier.testTag("find-empty")
+        )
+        else -> {
+            Eyebrow(countLabel(state.found.size, "result"))
+            Spacer(Modifier.height(2.dp))
+            state.found.forEach { person ->
+                val sending = person.id in state.sending
+                PersonCard(person, testTag = "find-result-${person.id}", onClick = { onOpenProfile(person.handle) }) {
+                    GreywireGhostButton(
+                        onClick = { onAdd(person) },
+                        enabled = !sending,
+                        modifier = Modifier.testTag("add-friend-${person.id}")
+                    ) {
+                        Icon(Icons.Filled.PersonAdd, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(if (sending) "Sending" else "Add")
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+            }
         }
     }
 }
