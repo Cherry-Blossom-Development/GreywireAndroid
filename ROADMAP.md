@@ -21,6 +21,10 @@ Small loose ends (polish, dev notes) stay in `TODO.md`. Update this file as each
 
 **New backend route (Breakroom `c139691`, pushed, not deployed):** `GET /api/friends/find?q=` (at least 2 characters) matches handle or name and leaves out yourself, guests and anyone you're already connected to (friends, pending requests either way, blocks either way); on Greywire only Greywire users. The old note here was wrong: `/api/friends/search` only searches your existing friends (it's for @mentions), and the web's Find Users tab loads every account from `/api/user/all` and filters in the browser. **Production needs a backend deploy** for Find to work there (and for the 2026-11-26 notification settings fix, `5b941aa`).
 
+**Waiting on Dallas (decisions, not code):** (1) deploy the Breakroom backend (`5b941aa`, `c139691`); (2) decide on the `/api/user/all` fix below (asked 2026-11-27, no answer yet); (3) pick the next step: finish 2.7 (typing indicators, "Message" from Friends) or start 2.5 bands.
+
+**For iPhone (check while matching 2.7 live chat):** the socket handshake needs `X-Site: greywire` (and the token in `auth`), or the backend treats it as Prosaurus. REST sends are also broadcast as `new_message`, so de-duplicate by id. `roomId` in socket events can arrive as a number or a string.
+
 **Security issue found (not fixed, Breakroom):** `GET /api/user/all` has no authentication. Anyone can call it and get every account's email, alternate email and subscription status. It's used by the web's Find Users tab (and probably admin pages). It should require an admin, and the web's Find Users should switch to `/api/friends/find`.
 
 **Next on Android (suggested):** the rest of 2.7 (typing indicators, starting a DM from Friends, images), or 2.5 bands. Also open: Block and Flag on other members' profiles (`TODO.md`).
@@ -39,6 +43,8 @@ Small loose ends (polish, dev notes) stay in `TODO.md`. Update this file as each
 - To start it: start Docker Desktop, then from `../Breakroom` run `docker compose --env-file .env.test -f docker-compose.test.yml up -d --build backend-test`; start the `Pixel_9_API_35` emulator.
 - The test backend stores uploads in the real S3 bucket (`prosaurus-breakroom-uploads`), so delete test sessions afterwards (deleting removes the S3 files).
 - `testadmin` has a pending friend request to `testuser` (sent 2026-11-26), handy for opening a profile from Friends.
+- `testuser` isn't in the Greywire default rooms (General 37, Gear and Tone 38, Gigs and Bands 39); `testadmin` is. To test live chat between two accounts, add testuser to `users_rooms` first. Posting with curl as testadmin while the app has the room open works for one account.
+- Everything was shut down at the end of 2026-11-27 (emulator, test backend, Docker Desktop).
 - Accounts: `testuser` holds test pedal `00000000000000A1` (member, no limits); `testadmin` is a Greywire user without a pedal (free tier: 3 band + 3 solo sessions), handy for testing the paywall. Test account `gwtest073722` exists. `npx ts-node database/setup.ts` in BreakTest resets everything.
 
 **Working style agreed:** small commits, one change each; push after each finished step; update this file as steps finish.
