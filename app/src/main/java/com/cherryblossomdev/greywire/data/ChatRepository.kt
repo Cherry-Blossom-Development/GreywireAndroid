@@ -7,12 +7,15 @@ import com.cherryblossomdev.greywire.network.ChatMessagesResponse
 import com.cherryblossomdev.greywire.network.ChatRoomsResponse
 import com.cherryblossomdev.greywire.network.MessageResponse
 import com.cherryblossomdev.greywire.network.SendMessageRequest
+import com.cherryblossomdev.greywire.network.SocketManager
 
-// Chat over REST for now: messages load when a room opens and on "Load
-// earlier messages". Live updates (Socket.IO, as Prosaurus does) come later.
+// Chat: messages load over REST when a room opens and on "Load earlier
+// messages", and sending is REST too. While a room is open, new, edited and
+// deleted messages arrive live over Socket.IO ([socket]).
 class ChatRepository(
     private val api: ChatApiService,
-    private val tokenManager: TokenManager
+    private val tokenManager: TokenManager,
+    val socket: SocketManager
 ) {
     suspend fun getRooms(): AuthResult<ChatRoomsResponse> =
         authedCall(tokenManager, "Couldn't load chat rooms") { api.getRooms(it) }

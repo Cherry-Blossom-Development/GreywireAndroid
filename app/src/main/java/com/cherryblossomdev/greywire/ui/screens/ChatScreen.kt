@@ -1,5 +1,10 @@
 package com.cherryblossomdev.greywire.ui.screens
 
+import androidx.compose.runtime.DisposableEffect
+import com.cherryblossomdev.greywire.network.ChatSocketEvent
+import com.cherryblossomdev.greywire.network.SocketState
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.filter
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -86,7 +91,8 @@ import kotlinx.coroutines.launch
 
 // The Chat tab (roadmap 2.7): the Greywire community's rooms and the user's
 // direct messages. A room opens inside the tab (the bottom bar stays), as on
-// iOS. Messages load over REST; live updates over Socket.IO come later.
+// iOS. Messages load and send over REST; while a room is open, new, edited
+// and deleted messages arrive live over Socket.IO (SocketManager).
 
 enum class ChatSection { Rooms, Messages }
 
@@ -168,6 +174,64 @@ class ChatRoomViewModel(
     private val _uiState = MutableStateFlow(ChatRoomUiState())
     val uiState: StateFlow<ChatRoomUiState> = _uiState
 
+    private var liveJob: Job? = null
+
+    /**
+     * Joins the room's live updates while it's on screen (see ChatRoomScreen).
+     * After a reconnect it reloads the newest messages, in case any were missed.
+     */
+    fun startLive() {
+        if (liveJob != null) return
+        val socket = repository.socket
+        socket.joinRoom(room.id)
+        liveJob = viewModelScope.launch {
+            launch {
+                socket.events.filter { it.roomId == room.id }.collect { event ->
+                    when (event) {
+                        is ChatSocketEvent.NewMessage -> {
+                            addMessages(listOf(event.message))
+                            repository.markRead(room.id)
+                        }
+                        is ChatSocketEvent.MessageEdited -> _uiState.value = _uiState.value.copy(
+                            messages = _uiState.value.messages.map { if (it.id == event.message.id) event.message else it }
+                        )
+                        is ChatSocketEvent.MessageDeleted -> _uiState.value = _uiState.value.copy(
+                            messages = _uiState.value.messages.filterNot { it.id == event.messageId }
+                        )
+                    }
+                }
+            }
+            launch {
+                // Skips the state at the start: the room has just loaded
+                var first = true
+                socket.state.collect { state ->
+                    if (state == SocketState.Connected && !first) catchUp()
+                    first = false
+                }
+            }
+        }
+    }
+
+    fun stopLive() {
+        liveJob?.cancel()
+        liveJob = null
+        repository.socket.leaveRoom(room.id)
+    }
+
+    /** Adds messages not already shown (a sent message also arrives over the socket), in id order. */
+    private fun addMessages(new: List<ChatMessage>) {
+        val current = _uiState.value.messages
+        val ids = current.mapTo(HashSet()) { it.id }
+        val added = new.filterNot { it.id in ids }
+        if (added.isEmpty()) return
+        _uiState.value = _uiState.value.copy(messages = (current + added).sortedBy { it.id })
+    }
+
+    private suspend fun catchUp() {
+        val result = repository.getMessages(room.id)
+        if (result is AuthResult.Success) addMessages(result.data.messages)
+    }
+
     fun updateDraft(text: String) {
         _uiState.value = _uiState.value.copy(draft = text, errorMessage = null)
     }
@@ -213,11 +277,10 @@ class ChatRoomViewModel(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isSending = true, errorMessage = null)
             when (val result = repository.sendMessage(room.id, text)) {
-                is AuthResult.Success -> _uiState.value = _uiState.value.copy(
-                    messages = _uiState.value.messages + result.data,
-                    draft = "",
-                    isSending = false
-                )
+                is AuthResult.Success -> {
+                    _uiState.value = _uiState.value.copy(draft = "", isSending = false)
+                    addMessages(listOf(result.data))
+                }
                 is AuthResult.Error -> fail(result)
             }
         }
@@ -368,6 +431,10 @@ private fun ChatRoomScreen(viewModel: ChatRoomViewModel, onBack: () -> Unit, onS
     val listState = rememberLazyListState()
 
     LaunchedEffect(Unit) { viewModel.load() }
+    DisposableEffect(viewModel) {
+        viewModel.startLive()
+        onDispose { viewModel.stopLive() }
+    }
     LaunchedEffect(uiState.sessionExpired) {
         if (uiState.sessionExpired) onSessionExpired()
     }

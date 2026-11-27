@@ -11,6 +11,7 @@ import com.cherryblossomdev.greywire.data.SessionsRepository
 import com.cherryblossomdev.greywire.data.SettingsRepository
 import com.cherryblossomdev.greywire.data.TokenManager
 import com.cherryblossomdev.greywire.network.RetrofitClient
+import com.cherryblossomdev.greywire.network.SocketManager
 
 // Simple manual dependency container, as in the Prosaurus app.
 class AppContainer(context: Context) {
@@ -24,7 +25,8 @@ class AppContainer(context: Context) {
     val authRepository by lazy { AuthRepository(RetrofitClient.apiService, tokenManager) }
     val greywireRepository by lazy { GreywireRepository(RetrofitClient.greywireApiService, tokenManager) }
     val billingRepository by lazy { BillingRepository(RetrofitClient.billingApiService, tokenManager) }
-    val chatRepository by lazy { ChatRepository(RetrofitClient.chatApiService, tokenManager) }
+    val socketManager by lazy { SocketManager(tokenManager) }
+    val chatRepository by lazy { ChatRepository(RetrofitClient.chatApiService, tokenManager, socketManager) }
     val sessionsRepository by lazy { SessionsRepository(RetrofitClient.sessionsApiService, RetrofitClient.sessionsUploadApiService, tokenManager) }
     val friendsRepository by lazy { FriendsRepository(RetrofitClient.friendsApiService, tokenManager) }
     val settingsRepository by lazy { SettingsRepository(RetrofitClient.settingsApiService, tokenManager) }

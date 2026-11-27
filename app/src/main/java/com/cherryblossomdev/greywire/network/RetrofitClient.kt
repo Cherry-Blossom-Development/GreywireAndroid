@@ -82,6 +82,18 @@ object RetrofitClient {
         .writeTimeout(30, TimeUnit.SECONDS)
         .build()
 
+    /**
+     * For Socket.IO (SocketManager): the same DNS fallback, but no logging or
+     * token interceptors. The socket sends its own headers and token.
+     */
+    val socketHttpClient: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .dns(fallbackDns)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(1, TimeUnit.MINUTES)
+            .build()
+    }
+
     private val retrofit = Retrofit.Builder()
         .baseUrl(BASE_URL)
         .client(okHttpClient)
