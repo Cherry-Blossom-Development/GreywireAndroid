@@ -15,15 +15,17 @@ Small loose ends (polish, dev notes) stay in `TODO.md`. Update this file as each
 
 **Status key:** `done` · `wip` · `todo` · `n/a` (nothing needed in that project) · `?` (not yet checked)
 
-## Where we left off (updated 2026-11-26)
+## Where we left off (updated 2026-11-27)
 
-**Done today on Android:** 2.9 is finished. Other members' profiles open from the Friends tab (read only), and Profile has Settings with notifications, the alternate email and the account deletion request, matching the web. One commit per section, pushed and tested on the emulator.
+**Done today on Android:** 2.8 is finished. The Friends tab has a third section, Find: search as you type, and Add sends a request (the person moves to Sent).
 
-**Backend fix today (Breakroom `5b941aa`, pushed, not deployed):** `PUT /api/user/notification-settings` and `PUT /api/user/audio-defaults` were caught by the admin route `PUT /api/user/:id` and refused with 403 for everyone except admins, on the web too. The `/:id` routes now skip ids that aren't numbers. **Production needs a backend deploy** for notification settings to save there.
+**New backend route (Breakroom `c139691`, pushed, not deployed):** `GET /api/friends/find?q=` (at least 2 characters) matches handle or name and leaves out yourself, guests and anyone you're already connected to (friends, pending requests either way, blocks either way); on Greywire only Greywire users. The old note here was wrong: `/api/friends/search` only searches your existing friends (it's for @mentions), and the web's Find Users tab loads every account from `/api/user/all` and filters in the browser. **Production needs a backend deploy** for Find to work there (and for the 2026-11-26 notification settings fix, `5b941aa`).
 
-**Next on Android (suggested):** 2.8 friend search and sending requests (the API call is already in both apps), then 2.7 live chat over Socket.IO, or 2.5 bands. Also open: Block and Flag on other members' profiles (`TODO.md`).
+**Security issue found (not fixed, Breakroom):** `GET /api/user/all` has no authentication. Anyone can call it and get every account's email, alternate email and subscription status. It's used by the web's Find Users tab (and probably admin pages). It should require an admin, and the web's Find Users should switch to `/api/friends/find`.
 
-**iPhone still to match:** 2.2 upload and delete (and the paywall on a 402), and all of 2.9/2.10: the Profile tab with editing, other members' profiles from Friends, and Settings.
+**Next on Android (suggested):** 2.7 live chat over Socket.IO, or 2.5 bands. Also open: Block and Flag on other members' profiles (`TODO.md`).
+
+**iPhone still to match:** 2.2 upload and delete (and the paywall on a 402), 2.8 Find (use `/api/friends/find`), and all of 2.9/2.10: the Profile tab with editing, other members' profiles from Friends, and Settings.
 
 **For iPhone (check while matching 2.2):** the session's recording date (`recorded_at`) comes as UTC midnight (`2026-11-24T00:00:00.000Z`); shown in local time it's a day early west of UTC. Android now formats it in UTC (`formatCalendarDate` in `Dates.kt`). iPhone probably has the same bug.
 
@@ -99,7 +101,7 @@ Web routes: `/chat`, `/sessions`, `/friends`, `/user/:handle`, `/profile`. The P
 | 2.5 Bands: create, invite (link and email), members, band sessions | done | done | todo | todo |
 | 2.6 Band setlists (`/bands/:id/setlists`) | done | ? | todo | todo |
 | 2.7 Chat: rooms and direct messages (Socket.IO) | done | done | wip | wip |
-| 2.8 Friends: list, requests, search (members only) | done | done | wip | wip |
+| 2.8 Friends: list, requests, search (members only) | done | done | done | wip |
 | 2.9 Profile: own profile, settings, other members' profiles | done | done | done | todo |
 | 2.10 Musician profile (bio, "musician only"; Greywire only) | done | done | done | todo |
 
@@ -108,7 +110,7 @@ Notes:
 - **2.7**: both apps list rooms and direct messages, open them, load earlier messages and send text. Still to do: live updates over Socket.IO (new messages only appear on reopening), images and videos (shown as a placeholder), starting a DM from Friends, and joining or creating rooms.
 - **2.7 iOS bugs (found while matching it on Android, 2026-11-23):** `GET /rooms/:id/messages` already returns oldest first, but `ChatRoomViewModel` reverses it, so messages show newest at the top and "Load earlier" uses the wrong `before`; `POST /rooms/:id/messages` answers `{ message: {...} }` but iOS decodes the message itself, so sending reports an error even though the message was saved; and `before` isn't URL-encoded. Android follows the backend.
 - **2.9 / 2.10** (Android, started 2026-11-24): the Profile tab shows your own profile and edits all of it: name and About bio (`PUT /api/profile`), the music bio and musician-only switch (`PUT /api/profile/musician`), instruments and bands (`/musician/instruments`, `/musician/bands`), and the photo (`POST`/`DELETE /api/profile/photo`). Bios use a formatting toolbar matching the web's. Other members' profiles (`GET /api/profile/user/:handle`) open read only from any person on the Friends tab, with About hidden for musician-only profiles. Settings (from the Profile tab) has the web's three sections: notifications (`/api/user/notification-settings`), the alternate email (`/api/user/alternate-email`) and the account deletion request (`POST /api/profile/deletion-request`). Done on Android 2026-11-26. Not on the app's other-profile screen yet: the web's Block and Flag buttons (see `TODO.md`). Test data: testadmin has a music bio, two instruments and two bands in `breakroom_test`.
-- **2.8**: both apps have the list and requests (accept, decline, cancel, remove). Still to do: search for people and send a request (`/api/friends/search`, `POST /api/friends/request/:id`; the API call is already in both apps).
+- **2.8**: both apps have the list and requests (accept, decline, cancel, remove). Android also has Find (2026-11-27): `GET /api/friends/find?q=` (added for the apps; the web still filters `/api/user/all` in the browser) and `POST /api/friends/request/:id`. Still to do: Find on iPhone. Not `/api/friends/search`, which only searches existing friends.
 
 ## Phase 3: Prosaurus music features brought into Greywire
 
@@ -157,6 +159,7 @@ Notes:
 
 Newest first. One line per finished step, with the commit.
 
+- 2026-11-27: 2.8 Android finished: Find in the Friends tab (`2607d6e`), with the new backend route `GET /api/friends/find` (Breakroom `c139691`). Tested with curl (self, pending requests and non-Greywire users left out; under 2 characters refused; `%` and `_` matched literally) and on the emulator as testadmin: searched "gw", added gwtest073722, saw them under Sent, then cancelled the request.
 - 2026-11-26: 2.9 Android finished: other members' profiles from Friends (`1b1c406`); Settings with notifications (`e8599c4`), the alternate email (`6fed6b8`) and the account deletion request (`0749ec2`). Backend fix (Breakroom `5b941aa`): `PUT /api/user/:id` caught `PUT /notification-settings` and `/audio-defaults` and refused them for non-admins, so those settings couldn't be saved on the web either. Tested on the emulator against the test backend: a profile opened from a sent request and Back; each notification switch saved and reloaded; an alternate email set, confirmed (in the database, as the test DB has no confirmation email template), its notices switch, and removed; a deletion request sent (then deleted from `breakroom_test`).
 - 2026-11-25: 2.9/2.10 Android: Profile editing, one commit per step: names, musician-only switch, instruments, bands, photo, then the bios with a formatting toolbar. Fixes: names failed to save with a null work bio; the tab's scroll position after an edit; dialog and menu test tags for Appium. Tested on the emulator against the test backend (add, edit, remove and validation for each; photo upload from a 4000x3000 JPEG came out 1024x768; bios saved unchanged come back byte for byte).
 - 2026-11-24: 2.2 Android: upload and delete, and the paywall on a 402 (1.10). Tested on the emulator: upload as a solo take with an instrument, playback of the upload, delete, and the paywall for testadmin's 4th solo session. Also fixed the recording date showing a day early. Test environment fixed (migrations 049 and 096 on `breakroom_test`, fresh `node_modules` volume).
